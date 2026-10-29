@@ -1,8 +1,23 @@
 // Client for the Mileto server. The app never talks to Meta directly; keys stay on the server (RNF-07).
 
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_PORT = 4000;
+
+/**
+ * The server runs on the same computer as the Expo dev server, so its address is derived from where
+ * the app was loaded. This keeps working when the Wi-Fi hands the computer a new IP.
+ * EXPO_PUBLIC_API_URL overrides it (e.g. a deployed server).
+ */
+function resolveApiUrl(): string {
+  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
+  if (Platform.OS === "web" && typeof window !== "undefined") return `http://${window.location.hostname}:${API_PORT}`;
+  const host = Constants.expoConfig?.hostUri?.split(":")[0];
+  return `http://${host ?? "localhost"}:${API_PORT}`;
+}
+
+export const API_URL = resolveApiUrl();
 
 export class ApiError extends Error {
   constructor(

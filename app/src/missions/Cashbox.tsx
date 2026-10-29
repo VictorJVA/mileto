@@ -1,17 +1,18 @@
-// Phase 11 (F4, RF-11, RF-12): opening and closing photos counted by SAM 3.1, confirmed by the kid,
+// Phase 11 (F4, RF-11, RF-12): opening and closing photos counted by SAM 3.1 and confirmed by the kid,
 // crossed with what the kid says they sold. Sales = open - close; revenue = sales x price, in code.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Mascot } from "../components/Mascot";
 import { PhotoInput } from "../components/PhotoInput";
-import { Body, Button, Card, ErrorNote, Field, H2, Stat, Stepper } from "../components/ui";
+import { Body, ErrorNote, Field, Stat, Stepper } from "../components/ui";
 import { VoiceInput } from "../components/VoiceInput";
 import { fill, t } from "../i18n/en";
 import { post } from "../lib/api";
-import { peso } from "../lib/theme";
+import { colors, peso } from "../lib/theme";
 import { useCall } from "../lib/useCall";
-import { earlier, type MissionProps } from "./types";
+import { useFooter, useLesson, type StepDef } from "../lesson/engine";
+import { earlier, MissionHead, useBusiness } from "./kit";
 
 interface CashResult {
   soldByCount: number;
@@ -36,76 +37,95 @@ export function parseSpokenCount(text: string): number | null {
   return null;
 }
 
-function CountStep({ label, noun, value, onChange }: { label: string; noun: string; value: number | null; onChange: (n: number) => void }) {
-  return (
-    <Card>
-      <H2>{label}</H2>
-      <PhotoInput<{ count: number }> endpoint="/api/ai/count" fields={{ noun }} onResult={(r) => onChange(r.count)} />
-      {value !== null ? (
-        <>
-          <Body>{fill(t.missions.cashbox.iSee, { n: value })}</Body>
-          <Stepper value={value} onChange={onChange} />
-        </>
-      ) : null}
-    </Card>
-  );
+function count(which: "open" | "close"): StepDef {
+  function Count() {
+    const lesson = useLesson();
+    const [noun, setNoun] = useState(String(lesson.state.noun ?? "cup"));
+    const [n, setN] = useState<number | null>(null);
+    const m = t.missions.cashbox;
+    const tooMany = which === "close" && n !== null && n > Number(lesson.state.open);
+    useFooter({ label: t.common.confirm, disabled: n === null || tooMany }, () => {
+      lesson.set({ noun, [which]: n });
+      lesson.next();
+    });
+    return (
+      <>
+        <MissionHead title={which === "open" ? `☀️ ${m.open}` : `🌙 ${m.close}`} say={which === "open" ? m.say : m.closeSay} />
+        {which === "open" ? <Field label={m.what} value={noun} onChangeText={setNoun} /> : null}
+        <PhotoInput<{ count: number }> endpoint="/api/ai/count" fields={{ noun }} onResult={(r) => setN(r.count)} />
+        {n !== null ? (
+          <>
+            <Mascot text={fill(m.iSee, { n })} size={60} />
+            <Stepper value={n} onChange={setN} />
+          </>
+        ) : (
+          <Body muted>{m.orCount}</Body>
+        )}
+        {n === null ? <Stepper value={0} onChange={setN} /> : null}
+        {tooMany ? <Body muted>🤔 {m.moreAtClose}</Body> : null}
+      </>
+    );
+  }
+  return { id: `count-${which}`, Component: Count };
 }
 
-export function Cashbox({ business, complete }: MissionProps) {
-  const price = earlier<{ price: number }>(business, "price").price ?? null;
-  const [noun, setNoun] = useState("cup");
-  const [atOpen, setAtOpen] = useState<number | null>(null);
-  const [atClose, setAtClose] = useState<number | null>(null);
-  const [voice, setVoice] = useState<number | null>(null);
-  const [coins, setCoins] = useState<Record<string, number> | null>(null);
-  const [result, setResult] = useState<CashResult | null>(null);
-  const { busy, error, run } = useCall();
+function Voice() {
+  const lesson = useLesson();
+  const [said, setSaid] = useState<number | null>(null);
   const m = t.missions.cashbox;
-
-  async function check() {
-    const r = await run(() =>
-      post<CashResult>("/api/calc/cashbox", { unitsAtOpen: atOpen, unitsAtClose: atClose, price: price ?? 0, soldByVoice: voice, coins: coins ?? undefined }),
-    );
-    if (r) setResult(r);
-  }
-
-  const say = !result ? m.say : result.matches ? m.match : m.mismatch;
+  useFooter({ label: t.common.continue, disabled: said === null }, () => {
+    lesson.set({ voice: said });
+    lesson.next();
+  });
   return (
     <>
-      <Mascot text={say} mood={result ? (result.matches ? "proud" : "stumble") : "curious"} />
-      <Field label="What are you counting? (one word)" value={noun} onChangeText={setNoun} />
-      <CountStep label={`☀️ ${m.open}`} noun={noun} value={atOpen} onChange={(n) => { setAtOpen(n); setResult(null); }} />
-      <CountStep label={`🌙 ${m.close}`} noun={noun} value={atClose} onChange={(n) => { setAtClose(n); setResult(null); }} />
-      <Card>
-        <H2>🗣️ {m.voice}</H2>
-        <VoiceInput onText={(text) => { setVoice(parseSpokenCount(text)); setResult(null); }} placeholder="I sold 13" />
-        {voice !== null ? <Stepper value={voice} onChange={(n) => { setVoice(n); setResult(null); }} /> : null}
-      </Card>
-      <PhotoInput<{ coins: Record<string, number>; total: number }>
-        label={m.coins}
-        endpoint="/api/ai/coins"
-        onResult={(r) => { setCoins(r.coins); setResult(null); }}
-      />
-      {coins ? (
-        <Body muted>
-          🪙 {Object.entries(coins).map(([d, c]) => `${c} × ${peso(Number(d))}`).join(" · ")}
-        </Body>
-      ) : null}
-
-      {result ? (
-        <View style={{ flexDirection: "row", gap: 8, marginVertical: 8 }}>
-          <Stat label="Sold" value={String(result.soldByCount)} />
-          <Stat label="Money in" value={peso(result.revenue)} tone="good" />
-          {result.coinsTotal !== null ? <Stat label="Coins" value={peso(result.coinsTotal)} tone={result.cashDifference === 0 ? "good" : "bad"} /> : null}
-        </View>
-      ) : null}
-      {!price ? <Body muted>Set your price in phase 8 first.</Body> : null}
-      <ErrorNote error={error} />
-      {result ? (
-        <Button label={t.common.done} busy={busy} onPress={() => run(() => complete({ ...result, unitsAtOpen: atOpen, unitsAtClose: atClose, price }))} />
-      ) : (
-        <Button label={t.common.confirm} onPress={check} disabled={atOpen === null || atClose === null || !price || atClose > atOpen} busy={busy} />
-      )}
+      <MissionHead title={`🗣️ ${m.voice}`} say={m.voiceSay} />
+      <VoiceInput onText={(text) => setSaid(parseSpokenCount(text))} placeholder="I sold 13" />
+      {said !== null ? <Stepper value={said} onChange={setSaid} /> : null}
     </>
   );
 }
+
+function Result() {
+  const lesson = useLesson();
+  const business = useBusiness();
+  const price = earlier<{ price: number }>(business, "price").price ?? 0;
+  const [r, setR] = useState<CashResult | null>(null);
+  const { busy, error, run, retry } = useCall();
+  const m = t.missions.cashbox;
+
+  useEffect(() => {
+    run(async () =>
+      setR(await post<CashResult>("/api/calc/cashbox", { unitsAtOpen: lesson.state.open, unitsAtClose: lesson.state.close, price, soldByVoice: lesson.state.voice })),
+    );
+    // Closes the box once with the confirmed counts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useFooter({ label: t.common.continue, disabled: !r, busy }, () => {
+    if (!r) return;
+    lesson.set({ result: { ...r, unitsAtOpen: lesson.state.open, unitsAtClose: lesson.state.close, price } });
+    lesson.check(true, { title: r.matches ? m.matchTitle : m.mismatchTitle, detail: r.matches ? undefined : m.mismatch });
+  });
+
+  return (
+    <>
+      <MissionHead title={m.resultTitle} />
+      {r ? (
+        <>
+          <Mascot text={r.matches ? m.match : m.mismatch} mood={r.matches ? "proud" : "stumble"} size={70} />
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Stat label={m.sold} value={String(r.soldByCount)} />
+            <Stat label={m.youSaid} value={String(r.soldByVoice ?? "–")} color={r.matches ? colors.good : colors.retry} />
+          </View>
+          <View style={{ height: 8 }} />
+          <Stat label={m.moneyIn} value={peso(r.revenue)} color={colors.good} />
+        </>
+      ) : null}
+      {!price ? <Body muted>{m.noPrice}</Body> : null}
+      <ErrorNote error={error} onRetry={retry} />
+    </>
+  );
+}
+
+export const cashboxSteps: StepDef[] = [count("open"), count("close"), { id: "voice", Component: Voice }, { id: "result", Component: Result }];

@@ -188,6 +188,11 @@ describe("progress", () => {
     const a = updateStreak({ streak: 2, lastActiveDate: "2026-10-28", graceDaysLeft: 2, graceWeek: "2026-10-26" }, "2026-10-28");
     expect(a.streak).toBe(2);
   });
+  it("two missions on the same day both give seeds", () => {
+    let s = applyEvent(initialProgress(), { type: "mission_completed", date: "2026-10-29", phase: 1 });
+    s = applyEvent(s, { type: "mission_completed", date: "2026-10-29", phase: 2 });
+    expect(s).toMatchObject({ seeds: 20, missionsCompleted: 2, streak: 1 });
+  });
   it("badges are not duplicated", () => {
     let s = applyEvent(initialProgress(), { type: "badge_earned", badge: "clear_accounts" });
     s = applyEvent(s, { type: "badge_earned", badge: "clear_accounts" });

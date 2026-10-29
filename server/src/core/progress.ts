@@ -55,7 +55,8 @@ export function updateStreak(
     return { streak: 1, lastActiveDate: date, graceDaysLeft, graceWeek: week };
   }
   const gap = daysBetween(state.lastActiveDate, date);
-  if (gap <= 0) return { ...state, graceDaysLeft, graceWeek: week };
+  // Same day: only the streak fields, so callers' other progress (seeds, missions) is not overwritten.
+  if (gap <= 0) return { streak: state.streak, lastActiveDate: state.lastActiveDate, graceDaysLeft, graceWeek: week };
 
   const missed = gap - 1;
   let streak: number;
