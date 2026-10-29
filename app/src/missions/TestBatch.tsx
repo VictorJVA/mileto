@@ -1,31 +1,60 @@
-// Phase 7: make a small batch and collect opinions by voice before making more.
+// Phase 7: make a small batch, then collect opinions by voice before making more.
 
 import { useState } from "react";
-import { Mascot } from "../components/Mascot";
-import { Body, Button, ErrorNote, H2, Stepper } from "../components/ui";
+import { Body, Stepper } from "../components/ui";
 import { VoiceInput } from "../components/VoiceInput";
-import { t } from "../i18n/en";
-import { useCall } from "../lib/useCall";
-import type { MissionProps } from "./types";
+import { fill, t } from "../i18n/en";
+import { useFooter, useLesson, type StepDef } from "../lesson/engine";
+import { MissionHead } from "./kit";
 
-export function TestBatch({ complete }: MissionProps) {
-  const [units, setUnits] = useState(5);
-  const [opinions, setOpinions] = useState<string[]>([]);
-  const { busy, error, run } = useCall();
+function Units() {
+  const lesson = useLesson();
+  const [units, setUnits] = useState(10);
   const m = t.missions.testBatch;
-
+  useFooter({ label: t.common.continue }, () => {
+    lesson.set({ units });
+    lesson.next();
+  });
   return (
     <>
-      <Mascot text={m.say} />
-      <H2>{m.units}</H2>
+      <MissionHead title={m.units} say={m.say} />
       <Stepper value={units} onChange={setUnits} min={1} />
-      <H2>💬 {opinions.length} / 3</H2>
-      {opinions.map((o, i) => (
-        <Body key={i} muted>“{o}”</Body>
-      ))}
-      <VoiceInput buttonLabel={m.opinion} onText={(o) => setOpinions([...opinions, o])} />
-      <ErrorNote error={error} />
-      <Button label={t.common.done} disabled={opinions.length < 1} busy={busy} onPress={() => run(() => complete({ units, opinions }))} />
+      {units > 30 ? <Body muted>🍲 {m.tooMany}</Body> : null}
     </>
   );
 }
+
+function Opinions() {
+  const lesson = useLesson();
+  const [done, setDone] = useState<string[]>([]);
+  const [current, setCurrent] = useState("");
+  const [round, setRound] = useState(0);
+  const m = t.missions.testBatch;
+  const saving = current.length >= 3;
+  useFooter({ label: saving ? m.save : t.common.continue, disabled: !saving && done.length < 1, tone: saving ? "blue" : "primary" }, () => {
+    if (saving) {
+      setDone([...done, current]);
+      setCurrent("");
+      setRound(round + 1);
+      return;
+    }
+    lesson.set({ result: { units: lesson.state.units, opinions: done } });
+    lesson.check(true, { title: m.tasted });
+  });
+  return (
+    <>
+      <MissionHead title={fill(m.opinion, { n: done.length + 1 })} say={m.opinionSay} />
+      <VoiceInput key={round} onText={setCurrent} placeholder={m.placeholder} />
+      {done.map((o, i) => (
+        <Body key={i} muted>
+          💬 “{o}”
+        </Body>
+      ))}
+    </>
+  );
+}
+
+export const testBatchSteps: StepDef[] = [
+  { id: "units", Component: Units },
+  { id: "opinions", Component: Opinions },
+];

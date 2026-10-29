@@ -2,47 +2,59 @@
 
 import { router } from "expo-router";
 import { useState } from "react";
+import { Text, View } from "react-native";
 import { Mascot } from "../components/Mascot";
-import { Button, Choice, ErrorNote, Field, Screen, Title } from "../components/ui";
+import { ErrorNote, Field, Option } from "../components/ui";
 import { t } from "../i18n/en";
 import { post, type Business, type EntryPoint } from "../lib/api";
 import { useSession } from "../lib/session";
+import { colors } from "../lib/theme";
+import { useCall } from "../lib/useCall";
+import { Lesson, useFooter, type StepDef } from "../lesson/engine";
 
 const ENTRIES: EntryPoint[] = ["no_idea", "has_idea", "already_selling"];
 
-export default function Entry() {
+/** Signal-strength bars: how far along the kid already is. */
+function Bars({ level }: { level: number }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 3, width: 34 }}>
+      {[0, 1, 2].map((i) => (
+        <View key={i} style={{ width: 8, height: 10 + i * 7, borderRadius: 3, backgroundColor: i <= level ? colors.blue : colors.surfaceHi }} />
+      ))}
+    </View>
+  );
+}
+
+function Choose() {
   const { student, setBusiness } = useSession();
   const [entry, setEntry] = useState<EntryPoint | null>(null);
   const [idea, setIdea] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-
+  const { busy, error, run } = useCall();
   const needsIdea = entry === "has_idea" || entry === "already_selling";
 
-  async function go() {
+  useFooter({ label: t.common.continue, disabled: !entry || (needsIdea && idea.trim().length < 2), busy }, async () => {
     if (!student || !entry) return;
-    setBusy(true);
-    try {
-      const b = await post<Business>("/api/businesses", { studentId: student.id, entry, idea: needsIdea ? idea.trim() : null });
-      await setBusiness(b);
-      router.replace("/map");
-    } catch (e) {
-      setError(e);
-    } finally {
-      setBusy(false);
-    }
-  }
+    const b = await run(() => post<Business>("/api/businesses", { studentId: student.id, entry, idea: needsIdea ? idea.trim() : null }));
+    if (!b) return;
+    await setBusiness(b);
+    router.replace("/map");
+  });
 
   return (
-    <Screen>
-      <Title>{t.entry.title}</Title>
-      <Mascot text={t.entry.say} />
-      {ENTRIES.map((e) => (
-        <Choice key={e} label={t.entry[e]} selected={entry === e} onPress={() => setEntry(e)} />
+    <>
+      <Mascot text={t.entry.title} />
+      <Text style={{ height: 4 }} />
+      {ENTRIES.map((e, i) => (
+        <Option key={e} label={t.entry[e]} selected={entry === e} onPress={() => setEntry(e)} icon={<Bars level={i} />} />
       ))}
-      {needsIdea ? <Field label={t.entry.ideaPrompt} value={idea} onChangeText={setIdea} maxLength={200} placeholder="Orange juice" /> : null}
+      {needsIdea ? <Field label={t.entry.ideaTitle} value={idea} onChangeText={setIdea} maxLength={200} placeholder={t.entry.ideaPlaceholder} autoFocus /> : null}
       <ErrorNote error={error} />
-      <Button label={t.common.next} onPress={go} disabled={!entry || (needsIdea && idea.trim().length < 2)} busy={busy} />
-    </Screen>
+    </>
   );
+}
+
+const STEPS: StepDef[] = [{ id: "entry", Component: Choose }];
+
+export default function Entry() {
+  return <Lesson steps={STEPS} onClose={() => router.replace("/")} onDone={() => router.replace("/map")} />;
 }

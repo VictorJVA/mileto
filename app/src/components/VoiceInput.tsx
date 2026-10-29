@@ -16,8 +16,8 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { t } from "../i18n/en";
 import { ApiError, upload } from "../lib/api";
 import { useSession } from "../lib/session";
-import { colors, type } from "../lib/theme";
-import { Button, Field } from "./ui";
+import { colors, font, type } from "../lib/theme";
+import { Field } from "./ui";
 
 const WAV_16K_MONO: RecordingOptions = {
   extension: ".wav",
@@ -36,12 +36,16 @@ const WAV_16K_MONO: RecordingOptions = {
   web: { mimeType: "audio/webm" },
 };
 
-export function VoiceInput({ onText, placeholder, buttonLabel }: { onText: (text: string) => void; placeholder?: string; buttonLabel?: string }) {
+/**
+ * Big microphone button. Calls `onText` with the transcript, or live as the kid types.
+ * The step's bottom button decides what to do with the text.
+ */
+export function VoiceInput({ onText, placeholder, label }: { onText: (text: string) => void; placeholder?: string; label?: string }) {
   const { student } = useSession();
   const recorder = useAudioRecorder(WAV_16K_MONO);
   const state = useAudioRecorderState(recorder);
   const [busy, setBusy] = useState(false);
-  const [typing, setTyping] = useState(Platform.OS !== "ios");
+  const [typing, setTyping] = useState(Platform.OS !== "ios" || !student?.adultConsent);
   const [typed, setTyped] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -75,47 +79,44 @@ export function VoiceInput({ onText, placeholder, buttonLabel }: { onText: (text
   return (
     <View style={{ marginVertical: 8 }}>
       {canRecord ? (
-        <Pressable
-          onPress={toggle}
-          disabled={busy}
-          accessibilityRole="button"
-          style={[styles.mic, state.isRecording && styles.micOn, busy && { opacity: 0.5 }]}
-        >
-          <Text style={styles.micIcon}>{state.isRecording ? "⏹" : "🎙️"}</Text>
-          <Text style={[type.body, { fontWeight: "700", color: state.isRecording ? "#fff" : colors.oliveDark }]}>
-            {busy ? t.voice.sending : state.isRecording ? `${t.voice.stop} · ${Math.round(state.durationMillis / 1000)}s` : buttonLabel ?? t.voice.hold}
+        <View style={{ alignItems: "center", marginVertical: 8 }}>
+          <Pressable
+            onPress={toggle}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={state.isRecording ? t.voice.stop : label ?? t.voice.hold}
+            style={({ pressed }) => [styles.mic, state.isRecording && styles.micOn, busy && { opacity: 0.5 }, pressed && { borderBottomWidth: 2, marginTop: 4 }]}
+          >
+            <Text style={{ fontSize: 40 }}>{state.isRecording ? "⏹" : "🎙️"}</Text>
+          </Pressable>
+          <Text style={[type.tag, { color: state.isRecording ? colors.retry : colors.blue, marginTop: 12 }]}>
+            {busy ? t.voice.sending : state.isRecording ? `${t.voice.stop} · ${Math.round(state.durationMillis / 1000)}s` : label ?? t.voice.hold}
           </Text>
-        </Pressable>
-      ) : !student?.adultConsent && Platform.OS === "ios" ? (
-        <Text style={type.small}>{t.voice.needsAdult}</Text>
-      ) : null}
-      {error ? <Text style={[type.small, { color: colors.warn }]}>{error}</Text> : null}
-      {canRecord && !typing ? (
-        <Pressable onPress={() => setTyping(true)}>
-          <Text style={[type.small, styles.link]}>{t.voice.type}</Text>
-        </Pressable>
-      ) : null}
-      {typing ? (
-        <View>
-          <Field label={t.voice.type} value={typed} onChangeText={setTyped} placeholder={placeholder} multiline />
-          <Button
-            label={t.common.next}
-            variant="secondary"
-            disabled={!typed.trim()}
-            onPress={() => {
-              onText(typed.trim());
-              setTyped("");
-            }}
-          />
+          {!typing ? (
+            <Pressable onPress={() => setTyping(true)} hitSlop={8}>
+              <Text style={[type.small, { textDecorationLine: "underline", marginTop: 10 }]}>{t.voice.type}</Text>
+            </Pressable>
+          ) : null}
         </View>
+      ) : null}
+      {error ? <Text style={[type.small, { color: colors.retry, textAlign: "center" }]}>{error}</Text> : null}
+      {typing ? (
+        <Field
+          value={typed}
+          onChangeText={(s) => {
+            setTyped(s);
+            onText(s.trim());
+          }}
+          placeholder={placeholder ?? t.voice.type}
+          multiline
+          style={{ minHeight: 96, textAlignVertical: "top", fontFamily: font.regular }}
+        />
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  mic: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, minHeight: 64, borderRadius: 32, borderWidth: 2, borderColor: colors.olive, backgroundColor: colors.card },
-  micOn: { backgroundColor: colors.warn, borderColor: colors.warn },
-  micIcon: { fontSize: 24 },
-  link: { textAlign: "center", textDecorationLine: "underline", marginTop: 8 },
+  mic: { width: 112, height: 112, borderRadius: 56, backgroundColor: colors.blue, borderBottomWidth: 6, borderColor: colors.blueEdge, alignItems: "center", justifyContent: "center" },
+  micOn: { backgroundColor: colors.retry, borderColor: "#C0702C" },
 });

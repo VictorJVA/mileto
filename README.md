@@ -22,7 +22,11 @@ One path with 12 phases in 3 worlds. Kids can enter from three points, and finis
 
 The three entry points are *I don't know what to sell*, *I have an idea* and *I already sell something*. On every path, kids must complete phase 4 (validation).
 
-Each phase has a real mission that gets checked:
+Each phase is a short lesson, one screen at a time:
+
+1. **Learn**: Mileto explains one idea with an everyday analogy, out loud. For example: an idea is a seed, price versus cost is a scale, and business money and your own money go in two jars.
+2. **Practice**: a mini-game or quiz. Kids can match pairs, sort cards into bins (*business jar or my jar?*) or balance a price scale. A wrong answer is never punished. Mileto explains it, and the question comes back at the end of the lesson.
+3. **Do**: the real mission, which gets checked:
 
 - **Validate**: 5 voice interviews. The model tags each answer, and code counts who would buy and works out the price range.
 - **Shopping**: price-tag photos from two stores. The model reads them, the kid confirms each value, and code finds the cheaper store per unit.
@@ -78,7 +82,7 @@ npm run dev                 # http://localhost:4000, teacher view at /teacher/
 # 2. App
 cd ../app
 npm install
-cp .env.example .env        # set EXPO_PUBLIC_API_URL to your computer's LAN IP, e.g. http://192.168.1.20:4000
+                            # the app finds the server on this computer automatically (port 4000)
 npx expo start              # scan the QR code with the iPhone camera to open Expo Go
 ```
 
