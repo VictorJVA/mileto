@@ -1,0 +1,15 @@
+node_modules/
+.env
+*.db
+*.db-journal
+.expo/
+dist/
+web-build/
+ios/
+android/
+.DS_Store
+*.log
+eval/*/*.jpg
+eval/*/*.jpeg
+eval/*/*.png
+eval/*/*.wav

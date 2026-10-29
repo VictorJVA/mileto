@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "Mileto",
+    "slug": "mileto",
+    "scheme": "mileto",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "app.mileto",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Mileto uses the camera, with an adult present, to read prices and count your products.",
+        "NSMicrophoneUsageDescription": "Mileto uses the microphone, with an adult present, to listen to your interviews and sales practice."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F3EFD8",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Mileto uses the microphone, with an adult present, to listen to your interviews and sales practice."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Mileto uses the camera, with an adult present, to read prices and count your products."
+        }
+      ],
+      "expo-asset"
+    ]
+  }
+}

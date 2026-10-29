@@ -1,0 +1,187 @@
+// All UI copy lives here so a Spanish locale can be added without touching screens.
+// Short sentences, minimal reading: Mileto also says these out loud (RNF-02).
+
+export const en = {
+  common: {
+    next: "Next",
+    done: "Done",
+    yes: "Yes",
+    no: "No",
+    retry: "Try again",
+    confirm: "That's right",
+    fix: "Fix it",
+    back: "Back",
+    loading: "Mileto is thinking…",
+    offline: "I can't reach the server. Check the connection and try again.",
+    guess: "This is a guess to test, not a promise.",
+  },
+  welcome: {
+    hello: "Hi! I'm Mileto, a little olive from far away. Let's start a tiny business together!",
+    nickname: "Your nickname",
+    nicknameHint: "Just a nickname. Not your real name.",
+    avatar: "Pick your olive",
+    age: "How old are you?",
+    classCode: "Class code (optional)",
+    start: "Let's go!",
+  },
+  consent: {
+    title: "Is an adult with you?",
+    say: "Before I use the camera or microphone, I need a grown-up to say it's okay.",
+    rules: [
+      "Photos and voice notes are only used to read numbers, then deleted.",
+      "Interviews only with people you know, with an adult nearby.",
+      "No real money moves in the app. An adult supervises any real sales.",
+    ],
+    check: "I am an adult and I will stay with this kid while they use the camera and microphone.",
+    accept: "Unlock camera and microphone",
+    later: "Not now",
+  },
+  entry: {
+    title: "Where are you starting?",
+    say: "Tell me where you are, and I'll find the right path.",
+    no_idea: "I don't know what to sell",
+    has_idea: "I have an idea",
+    already_selling: "I already sell something",
+    ideaPrompt: "What's your idea?",
+  },
+  map: {
+    title: "Your path",
+    say: "First we look, then we decide!",
+    garden: "My garden",
+    growth: "Growth modules (after your first loop)",
+  },
+  garden: {
+    title: "My garden",
+    seeds: "seeds",
+    streak: "day streak",
+    grace: "grace days left this week",
+    badges: "Badges",
+    noBadges: "Your first badge is one mission away.",
+    book: "Learning book",
+    noLearnings: "Every stumble you write here becomes a clue.",
+    addStumble: "Add a stumble",
+    stumbleSay: "Great stumble! Now we know something new.",
+  },
+  badges: {
+    customer_detective: "Customer Detective",
+    clear_accounts: "Clear Accounts",
+    brave_stumble: "Brave Stumble",
+    first_sale: "First Sale",
+    good_host: "Good Host",
+  } as Record<string, string>,
+  stages: { seed: "Seed", sprout: "Sprout", plant: "Plant", tree: "Tree" } as Record<string, string>,
+  voice: {
+    hold: "Tap to talk",
+    stop: "Tap to stop",
+    sending: "Listening…",
+    type: "Or type it",
+    needsAdult: "An adult needs to unlock the microphone first.",
+  },
+  photo: {
+    take: "Take a photo",
+    needsAdult: "An adult needs to unlock the camera first.",
+  },
+  missions: {
+    discover: {
+      say: "Tell me: what do you know how to do, and what do you have at home?",
+      pick: "Pick the idea you like most",
+    },
+    choose: {
+      say: "Four quick questions about your idea.",
+      questions: {
+        canMakeIt: "Can you make it or get it with what you have?",
+        someoneWantsIt: "Do you know someone who would want it?",
+        isSafe: "Is it safe to make and sell (or will an adult help)?",
+        cheapToStart: "Can you start with little money?",
+      } as Record<string, string>,
+      unsafe: "Let's ask an adult to help with this idea before we go on.",
+      pass: "Good idea to test! Next: why, how and what.",
+      fail: "Hmm, let's tweak the idea a bit. Which answer could become a yes?",
+    },
+    golden: {
+      say: "Tell me why people would want it, how you'll make it, and what exactly you sell.",
+      card: "Your business card",
+      confirm: "Is this your business?",
+    },
+    validate: {
+      say: "Before we spend a single peso, let's ask five people you know. First we look, then we decide!",
+      script: [
+        "Hi! I'm thinking of selling {idea}.",
+        "Would you buy it? Why?",
+        "How much would you pay for it?",
+        "When would you buy it?",
+        "What would make it better?",
+      ],
+      record: "Record interview {n}",
+      minimum: "Record at least 3 interviews.",
+      summarize: "See what people said",
+      keepGoing: "People like it! Let's plan what you need.",
+      adjust: "Fewer than half said yes. That's a great clue: let's adjust the idea.",
+    },
+    shopping: {
+      say: "Take a photo of prices at two stores, and I'll find the better deal.",
+      store: "Store {n}",
+      item: "What do you need to buy?",
+      cheaper: "{store} is cheaper by {savings} per unit.",
+      tie: "Both stores cost the same.",
+    },
+    capital: {
+      say: "Two jars: one for the business, one for you. The business jar is not for candy!",
+      start: "How much money do you start with?",
+      fromWhere: "Where does it come from? (Your savings, a gift…) No loans.",
+    },
+    testBatch: {
+      say: "Taste the soup before adding all the salt! Make a small batch and ask for opinions.",
+      units: "How many did you make?",
+      opinion: "Record an opinion",
+    },
+    price: {
+      say: "Let's balance costs and price. I'll do the math.",
+      units: "How many units will you make?",
+      price: "Your price",
+      competitor: "What do others charge? (optional)",
+      unitCost: "Cost per unit",
+      profit: "Profit per unit",
+      breakEven: "Sell {n} to get your money back",
+      loss: "At this price you lose money on each one. Try a higher price.",
+    },
+    brand: {
+      say: "Your brand is your team's jersey: people recognize you from far away.",
+      choose: "Pick a name and slogan, or write your own",
+      poster: "Make my poster",
+      actions: "Three ways to get known",
+      actionNames: { word_of_mouth: "Word of mouth", free_sample: "Free sample", poster: "Poster" } as Record<string, string>,
+      noSocial: "Want to post it online? Ask an adult first.",
+    },
+    sales: {
+      say: "Be a good host: listen before you offer. Let's practice with a tricky customer.",
+      pickScenario: "Pick a practice customer",
+      yourTurn: "Your turn: answer the customer",
+      feedback: "How it went",
+      again: "Practice again",
+      realSales: "How many did you really sell?",
+    },
+    cashbox: {
+      say: "Photo when you open, photo when you close. I'll count.",
+      open: "Opening photo",
+      close: "Closing photo",
+      iSee: "I see {n}. Is that right?",
+      voice: "How many did you sell? Tell me.",
+      match: "Your count and your words match. Clear Accounts!",
+      mismatch: "Hmm, the numbers don't match. What happened? No worries, let's figure it out.",
+      coins: "Count my coins (optional)",
+    },
+    decide: {
+      say: "Save some seeds from the harvest. What will you do with your profit?",
+      scenarios: { repeat: "Do the same again", change_price: "Change the price", save_part: "Save part of it" } as Record<string, string>,
+      split: "Split your profit into two jars",
+      pitch: "Now pitch your business in 30 seconds!",
+    },
+  },
+} as const;
+
+export const t = en;
+
+export function fill(template: string, values: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, k: string) => String(values[k] ?? `{${k}}`));
+}

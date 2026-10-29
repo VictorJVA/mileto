@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mileto Teacher</title>
+  <style>
+    :root { --bg:#FBF8F1; --card:#FFFFFF; --ink:#23301F; --muted:#6B7466; --olive:#5B7A2E; --leaf:#8DB255; --warn:#C2410C; --line:#E7E2D6; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#151A12; --card:#1F261A; --ink:#EEF2E8; --muted:#A3AD9A; --olive:#9CC261; --leaf:#B9D98B; --warn:#FB923C; --line:#2E3828; } }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 system-ui,-apple-system,sans-serif; }
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 1.5rem; margin: 0 0 4px; }
+    p.sub { color: var(--muted); margin: 0 0 20px; }
+    form { display:flex; gap:8px; margin-bottom: 20px; }
+    input { flex:1; max-width:200px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink); font-size:1rem; text-transform:uppercase; }
+    button { padding:10px 16px; border:0; border-radius:10px; background:var(--olive); color:#fff; font-weight:600; font-size:1rem; }
+    .stuck { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+    .chip { background:var(--card); border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:.9rem; }
+    .grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .card h2 { font-size:1.1rem; margin:0; display:flex; justify-content:space-between; align-items:center; }
+    .idea { color:var(--muted); margin:2px 0 12px; }
+    .bar { height:8px; background:var(--line); border-radius:999px; overflow:hidden; margin:6px 0 10px; }
+    .bar span { display:block; height:100%; background:var(--leaf); }
+    .meta { font-size:.9rem; color:var(--muted); }
+    .help { color:var(--warn); font-weight:600; font-size:.85rem; }
+    .empty { color:var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>🫒 Mileto · Teacher view</h1>
+  <p class="sub">Where each student is on the path, and who might need a hand in class.</p>
+  <form id="f"><input id="code" value="DEMO1" aria-label="Class code" /><button>Open class</button></form>
+  <div class="stuck" id="stuck"></div>
+  <div class="grid" id="grid"><p class="empty">Loading…</p></div>
+</main>
+<script>
+  const garden = { seed: "🌰 Seed", sprout: "🌱 Sprout", plant: "🌿 Plant", tree: "🌳 Tree" };
+  const badgeNames = { customer_detective: "Customer Detective", clear_accounts: "Clear Accounts", brave_stumble: "Brave Stumble", first_sale: "First Sale", good_host: "Good Host" };
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+  async function load(code) {
+    const grid = document.getElementById("grid"), stuck = document.getElementById("stuck");
+    const res = await fetch(`/api/teacher/classes/${encodeURIComponent(code)}`);
+    const data = await res.json();
+    stuck.innerHTML = Object.entries(data.stuckByPhase).map(([p, n]) => `<span class="chip">${esc(p)}: ${n}</span>`).join("");
+    if (!data.students.length) { grid.innerHTML = '<p class="empty">No students in this class yet.</p>'; return; }
+    grid.innerHTML = data.students.map((s) => `
+      <article class="card">
+        <h2>${esc(s.nickname)} ${s.needsHelp ? '<span class="help">Quiet 4+ days</span>' : ""}</h2>
+        <p class="idea">${esc(s.idea ?? "Looking for an idea")}</p>
+        <div class="meta">Now: <b>${esc(s.currentPhase ? s.currentPhase.id + ". " + s.currentPhase.title : "Path complete")}</b> · ${s.phasesDone}/12 done</div>
+        <div class="bar"><span style="width:${Math.round((s.phasesDone / 12) * 100)}%"></span></div>
+        <div class="meta">${garden[s.garden]} · ${s.seeds} seeds · ${s.streak}-day streak · ${s.stumbles} stumbles logged</div>
+        <div class="meta">${s.badges.map((b) => "🏅 " + esc(badgeNames[b] ?? b)).join(" · ") || "No badges yet"}</div>
+      </article>`).join("");
+  }
+  document.getElementById("f").addEventListener("submit", (e) => { e.preventDefault(); load(document.getElementById("code").value.trim()); });
+  load("DEMO1");
+</script>
+</body>
+</html>
