@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { NeedsConfirmationError } from "./agent/tools.js";
 import { PhaseLockedError } from "./core/index.js";
 import { isMockMode, MetaApiError } from "./meta/client.js";
+import { WavError } from "./meta/wav.js";
 import { Store } from "./db/store.js";
 import { aiRouter } from "./routes/ai.js";
 import { calcRouter } from "./routes/calc.js";
@@ -15,7 +16,17 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 
 export function createApp(store = new Store()) {
   const app = express();
+  // Photos and voice notes arrive as base64 JSON from the phone, so AI routes take bigger bodies.
+  app.use("/api/ai", express.json({ limit: "25mb" }));
   app.use(express.json({ limit: "1mb" }));
+  // One line per request in the server terminal, to see what the phone is doing.
+  app.use((req, res, next) => {
+    const t0 = Date.now();
+    res.on("finish", () => {
+      if (req.path !== "/health") console.log(`${req.method} ${req.path} → ${res.statusCode} (${Date.now() - t0} ms)`);
+    });
+    next();
+  });
   // The web fallback of the app runs on another origin. No cookies are used, so a wildcard is safe.
   app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -36,6 +47,7 @@ export function createApp(store = new Store()) {
 
   const onError: ErrorRequestHandler = (err, _req, res, _next) => {
     if (err instanceof ZodError) return void res.status(400).json({ error: "invalid_request", issues: err.issues });
+    if (err instanceof WavError) return void res.status(400).json({ error: "unsupported_audio", message: err.message });
     if (err instanceof RangeError) return void res.status(400).json({ error: "invalid_numbers", message: err.message });
     if (err instanceof NotFoundError) return void res.status(404).json({ error: `${err.message}_not_found` });
     if (err instanceof NeedsConfirmationError) return void res.status(422).json({ error: "needs_confirmation", tool: err.tool });

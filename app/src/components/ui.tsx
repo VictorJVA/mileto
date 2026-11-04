@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
 import { t } from "../i18n/en";
+import { ApiError } from "../lib/api";
 import { colors, font, radius, type } from "../lib/theme";
 
 type Tone = "primary" | "blue" | "ghost" | "good" | "retry" | "gold";
@@ -164,11 +165,22 @@ export function Stat({ label, value, color = colors.ink }: { label: string; valu
   );
 }
 
+/** Says what actually went wrong: no connection, Mileto didn't understand, or the AI is busy. */
+export function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === "needs_confirmation") return t.common.notUnderstood;
+    if (error.code === "model_unavailable" || error.status >= 500) return t.common.aiBusy;
+    if (error.status === 403) return t.voice.needsAdult;
+    return t.common.somethingOff;
+  }
+  return t.common.offline;
+}
+
 export function ErrorNote({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   if (!error) return null;
   return (
     <View style={{ marginVertical: 8 }}>
-      <Text style={[type.small, { color: colors.retry, marginBottom: onRetry ? 10 : 0 }]}>{t.common.offline}</Text>
+      <Text style={[type.small, { color: colors.retry, marginBottom: onRetry ? 10 : 0 }]}>{errorMessage(error)}</Text>
       {onRetry ? <Button label={t.common.tryAgain} tone="ghost" onPress={onRetry} /> : null}
     </View>
   );

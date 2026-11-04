@@ -137,7 +137,7 @@ const STEPS: StepDef[] = [
 ];
 
 export default function Welcome() {
-  return <Lesson steps={STEPS} onClose={() => router.replace("/welcome")} onDone={() => router.replace("/consent")} />;
+  return <Lesson steps={STEPS} topic="Getting started" tutor={false} onClose={() => router.replace("/welcome")} onDone={() => router.replace("/consent")} />;
 }
 
 const styles = StyleSheet.create({

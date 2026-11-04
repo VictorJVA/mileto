@@ -22,11 +22,14 @@ One path with 12 phases in 3 worlds. Kids can enter from three points, and finis
 
 The three entry points are *I don't know what to sell*, *I have an idea* and *I already sell something*. On every path, kids must complete phase 4 (validation).
 
-Each phase is a short lesson, one screen at a time:
+Each phase is a real lesson, one screen at a time, built on how kids learn best:
 
-1. **Learn**: Mileto explains one idea with an everyday analogy, out loud. For example: an idea is a seed, price versus cost is a scale, and business money and your own money go in two jars.
-2. **Practice**: a mini-game or quiz. Kids can match pairs, sort cards into bins (*business jar or my jar?*) or balance a price scale. A wrong answer is never punished. Mileto explains it, and the question comes back at the end of the lesson.
-3. **Do**: the real mission, which gets checked:
+1. **Hook**: a short story where a kid like them hits the problem (Mateo wants a football, Lina bakes 50 cupcakes nobody buys…).
+2. **Explain**: the idea in bite-size cards, an everyday analogy (an idea is a seed, price vs. cost is a scale, two jars for money) and a worked example solved step by step.
+3. **Practice**: varied games, from recognizing to producing: picture choice, quiz, fill in the blank, put steps in order, true/false lightning round, match pairs, sort into bins, a price balance. A wrong answer is never punished: Mileto explains, and the question comes back at the end. Three right in a row lights a combo.
+4. **Now with YOUR idea**: once the kid has an idea, Mileto rewrites the worked example and one question around their own business. A kid building websites learns cost per unit with domains and hosting, not oranges. For money lessons the model only proposes example inputs (materials, packs, counts), and the server's code computes every number shown. The practice games are reworded around their idea too ("Which jar pays for the hosting?"). The server checks each reworded game keeps exactly the same answer key (same correct option, true/false values, bins and order) and drops any that don't. Calculation questions are never reworded, because their numbers must come from code. Each one is generated once per phase and idea, then cached.
+5. **Recap**: what they learned, in three lines.
+6. **Do**: the real mission, which gets checked:
 
 - **Validate**: 5 voice interviews. The model tags each answer, and code counts who would buy and works out the price range.
 - **Shopping**: price-tag photos from two stores. The model reads them, the kid confirms each value, and code finds the cheaper store per unit.
@@ -34,6 +37,10 @@ Each phase is a short lesson, one screen at a time:
 - **Sales**: the kid practices with a simulated customer who objects ("that's expensive"), for at most 3 turns. A fixed rubric in code scores the conversation.
 - **Cash box**: SAM 3.1 counts the products in an opening and a closing photo. The kid confirms ("I see 20, is that right?"). Code works out sales and revenue and checks them against what the kid says out loud.
 - **Decide**: code simulates three scenarios that are labeled as guesses, not promises. The kid splits the profit into two jars and pitches by voice.
+
+**Mileto the tutor** is on every lesson screen. Kids can ask by voice or text ("give me a hint", "why was I wrong?"). He is Socratic: he answers with guiding questions and a hint ladder (a nudge, then a pointer, then a similar example with different numbers), and never gives the answer. A code guard on the server blocks any reply that repeats the correct answer.
+
+**World tests**: a trophy at the end of each world unlocks a short mixed test of that world's questions, with no tutor and no repeats. Passing (70%) earns bonus seeds and the World Champion crown.
 
 **Progress** works like Duolingo but is gentler: a garden that grows, seeds, and a streak with 2 grace days a week. Missing a day never costs anything. Badges reward real habits (*Customer Detective*, *Clear Accounts*, *Brave Stumble*), and a learning book turns mistakes into clues.
 

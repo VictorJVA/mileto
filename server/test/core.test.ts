@@ -288,3 +288,61 @@ describe("path", () => {
     expect(() => completePhase(startingStatuses("no_idea"), 5)).toThrow();
   });
 });
+
+describe("checkpoints", async () => {
+  const { checkpointSeeds } = await import("../src/core/index.js");
+  it("passes at 70% and gives bonus seeds", () => {
+    expect(checkpointSeeds(7, 10)).toEqual({ seeds: 24, passed: true });
+    expect(checkpointSeeds(6, 10)).toEqual({ seeds: 12, passed: false });
+  });
+  it("rejects impossible scores", () => {
+    expect(() => checkpointSeeds(11, 10)).toThrow(RangeError);
+  });
+});
+
+describe("normalizeWav", async () => {
+  const { normalizeWav } = await import("../src/meta/wav.js");
+  function wav({ rate, channels, bits, format = 1, extra = false }: { rate: number; channels: number; bits: number; format?: number; extra?: boolean }) {
+    const frames = rate / 10;
+    const bytes = bits / 8;
+    const data = Buffer.alloc(frames * channels * bytes);
+    for (let i = 0; i < frames * channels; i++) {
+      const v = Math.sin(i / 10) * 0.5;
+      if (format === 3) data.writeFloatLE(v, i * 4);
+      else data.writeInt16LE(Math.round(v * 32767), i * 2);
+    }
+    const fmt = Buffer.alloc(24);
+    fmt.write("fmt ", 0, "ascii");
+    fmt.writeUInt32LE(16, 4);
+    fmt.writeUInt16LE(format, 8);
+    fmt.writeUInt16LE(channels, 10);
+    fmt.writeUInt32LE(rate, 12);
+    fmt.writeUInt32LE(rate * channels * bytes, 16);
+    fmt.writeUInt16LE(channels * bytes, 20);
+    fmt.writeUInt16LE(bits, 22);
+    const fllr = Buffer.concat([Buffer.from("FLLR"), Buffer.from([4, 0, 0, 0, 0, 0, 0, 0])]);
+    const dataHdr = Buffer.alloc(8);
+    dataHdr.write("data", 0, "ascii");
+    dataHdr.writeUInt32LE(data.length, 4);
+    const body = Buffer.concat([Buffer.from("WAVE"), fmt, extra ? fllr : Buffer.alloc(0), dataHdr, data]);
+    const riff = Buffer.alloc(8);
+    riff.write("RIFF", 0, "ascii");
+    riff.writeUInt32LE(body.length, 4);
+    return Buffer.concat([riff, body]);
+  }
+  const info = (b: Buffer) => ({ channels: b.readUInt16LE(22), rate: b.readUInt32LE(24), bits: b.readUInt16LE(34), dataBytes: b.readUInt32LE(40) });
+
+  it("resamples a 44.1 kHz iPhone recording to 16 kHz mono", () => {
+    expect(info(normalizeWav(wav({ rate: 44100, channels: 1, bits: 16, extra: true })))).toEqual({ channels: 1, rate: 16000, bits: 16, dataBytes: 3200 });
+  });
+  it("downmixes 48 kHz stereo float", () => {
+    expect(info(normalizeWav(wav({ rate: 48000, channels: 2, bits: 32, format: 3 })))).toMatchObject({ channels: 1, rate: 16000, bits: 16 });
+  });
+  it("keeps 16 kHz mono and drops extra chunks", () => {
+    const out = normalizeWav(wav({ rate: 16000, channels: 1, bits: 16, extra: true }));
+    expect(out.length).toBe(44 + 3200);
+  });
+  it("rejects non-WAV audio", () => {
+    expect(() => normalizeWav(Buffer.from("not audio at all"))).toThrow(/WAV/);
+  });
+});

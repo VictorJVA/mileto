@@ -12,7 +12,7 @@ import {
   type CustomerSource,
   type SalesTags,
 } from "../core/index.js";
-import { CUSTOMER_SYSTEM, MASCOT_SYSTEM } from "./persona.js";
+import { CUSTOMER_SYSTEM, MASCOT_SYSTEM, TUTOR_SYSTEM } from "./persona.js";
 import { checkKidInput, containsPersonalData, SAFE_REPLIES } from "./safety.js";
 
 /** The model output could not be trusted; the app should ask the kid to say or type the value. */
@@ -22,7 +22,7 @@ export class NeedsConfirmationError extends Error {
   }
 }
 
-async function askJson<T extends z.ZodType>(
+export async function askJson<T extends z.ZodType>(
   tool: string,
   schema: T,
   messages: meta.ChatMessage[],
@@ -36,6 +36,7 @@ async function askJson<T extends z.ZodType>(
       if (parsed.success) return parsed.data;
     } catch (err) {
       if (err instanceof meta.MetaApiError && err.status < 500 && err.status !== 429) throw err;
+      console.warn(`${tool}: attempt ${attempt + 1} failed: ${err instanceof Error ? err.message : err}`);
     }
   }
   throw new NeedsConfirmationError(tool);
@@ -258,4 +259,57 @@ export async function pitchFeedback(transcript: string) {
       content: `The kid pitched their business:\n"""${transcript}"""\nGive one specific strength and one specific suggestion. No grades.`,
     },
   ]);
+}
+
+// Socratic tutor inside lessons: guides with questions and a hint ladder, never gives the answer.
+export const MAX_HINT_LEVEL = 3;
+const TutorReply = z.object({ reply: z.string().max(400) });
+
+export interface TutorInput {
+  topic: string;
+  step?: { prompt?: string; options?: string[]; answer?: string; explain?: string };
+  history: Array<{ role: "kid" | "mileto"; text: string }>;
+  message: string;
+}
+
+/** True when the reply gives away the answer: the answer text, or "option N" for the right option. */
+export function revealsAnswer(reply: string, step: TutorInput["step"]): boolean {
+  if (!step?.answer) return false;
+  const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N} ]/gu, " ").replace(/\s+/g, " ").trim();
+  const answer = norm(step.answer);
+  if (answer.length >= 4 && norm(reply).includes(answer)) return true;
+  // A long answer is given away by quoting most of its distinctive words.
+  const words = answer.split(" ").filter((w) => w.length > 3);
+  const said = new Set(norm(reply).split(" "));
+  return words.length >= 4 && words.filter((w) => said.has(w)).length / words.length >= 0.7;
+}
+
+export async function tutorReply(input: TutorInput) {
+  const guard = checkKidInput(input.message);
+  if (!guard.ok) return { reply: SAFE_REPLIES[guard.reason], hintLevel: 0, stoppedForSafety: guard.reason === "distress" };
+
+  const hintLevel = Math.min(MAX_HINT_LEVEL, input.history.filter((h) => h.role === "kid").length + 1);
+  const step = input.step;
+  const context = [
+    `Lesson topic: ${input.topic}`,
+    step?.prompt ? `Current exercise: ${step.prompt}` : "The kid is reading the explanation, not answering yet.",
+    step?.options?.length ? `Options shown: ${step.options.map((o) => `"${o}"`).join(", ")}` : "",
+    step?.answer ? `SECRET correct answer (never reveal it): "${step.answer}"` : "",
+    step?.explain ? `Why it is correct (use to guide, never quote): ${step.explain}` : "",
+    `Hint level: ${hintLevel}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const messages: meta.ChatMessage[] = [
+    { role: "system", content: `${TUTOR_SYSTEM}\n\n${context}` },
+    ...input.history.map((h): meta.ChatMessage => ({ role: h.role === "kid" ? "user" : "assistant", content: h.text })),
+    { role: "user", content: input.message },
+  ];
+  let { reply } = await askJson("tutor_reply", TutorReply, messages);
+  // Code-level guard: if the model gave the answer away, swap in a safe nudge.
+  if (revealsAnswer(reply, step)) {
+    reply = hintLevel >= 2 ? "You're close! Look at the question again: which choice matches the idea we just learned?" : "Good thinking! What did we learn about this a moment ago?";
+  }
+  return { reply, hintLevel, stoppedForSafety: false };
 }

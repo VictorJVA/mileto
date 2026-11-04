@@ -15,6 +15,12 @@ export function checkKidInput(text: string): SafetyVerdict {
   return { ok: true };
 }
 
+/** Phone numbers or emails in generated text. Narrower than containsPersonalData, for lesson examples
+ * where words like "school" are normal. */
+export function containsContactInfo(text: string): boolean {
+  return PHONE.test(text) || EMAIL.test(text);
+}
+
 /** Rejects generated text (posters, brand names) that contains personal data. */
 export function containsPersonalData(text: string): boolean {
   return PHONE.test(text) || EMAIL.test(text) || ADDRESS.test(text);

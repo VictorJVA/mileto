@@ -1,19 +1,21 @@
-// A phase is one lesson: learn the idea (analogy), practice it (mini-games, quiz), then do the real mission.
+// A phase is one lesson: a story hooks the kid, Mileto explains the idea with an analogy and a worked
+// example, games practice it, a recap closes the learning, and then comes the real mission.
 // When the lesson ends, the confirmed result is saved and the garden grows.
 
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Olive, say } from "../../components/Mascot";
-import { Button, ErrorNote } from "../../components/ui";
+import { useEffect, useMemo, useState } from "react";
+import { View } from "react-native";
+import { Celebration } from "../../components/Celebration";
+import { ErrorNote } from "../../components/ui";
 import { t } from "../../i18n/en";
 import type { Progress } from "../../lib/api";
 import { useSession } from "../../lib/session";
-import { colors, font, type } from "../../lib/theme";
+import { colors } from "../../lib/theme";
 import { useCall } from "../../lib/useCall";
 import { LESSONS } from "../../lesson/content";
 import { Lesson, type StepDef } from "../../lesson/engine";
+import { personal, withIdea } from "../../lesson/steps";
+import { loadPersonal, loadPersonalGames } from "../../lib/personal";
 import { brandSteps } from "../../missions/Brand";
 import { capitalSteps } from "../../missions/Capital";
 import { cashboxSteps } from "../../missions/Cashbox";
@@ -42,67 +44,73 @@ const MISSIONS: Record<string, StepDef[]> = {
   decide: decideSteps,
 };
 
-function Celebration({ progress, before, badges }: { progress: Progress; before: Progress; badges: string[] }) {
-  useEffect(() => say(t.lesson.complete), []);
-  const tiles = [
-    { label: t.lesson.seedsEarned, value: `+${progress.seeds - before.seeds}`, color: colors.good, edge: colors.primaryEdge, icon: "🌱" },
-    { label: t.lesson.streak, value: String(progress.streak), color: colors.retry, edge: "#C0702C", icon: "🔥" },
-  ];
-  return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.center}>
-        <Olive mood="proud" size={150} />
-        <Text style={[type.title, { color: colors.gold, fontFamily: font.black, fontSize: 32, marginTop: 24, textAlign: "center" }]}>{t.lesson.complete}</Text>
-        <View style={{ flexDirection: "row", gap: 12, marginTop: 24 }}>
-          {tiles.map((tile) => (
-            <View key={tile.label} style={[styles.tile, { borderColor: tile.color, backgroundColor: tile.color }]}>
-              <Text style={[type.tag, { color: colors.bg, fontSize: 12, textAlign: "center", paddingVertical: 4 }]}>{tile.label}</Text>
-              <View style={styles.tileInner}>
-                <Text style={[type.h2, { color: tile.color, fontFamily: font.black, fontSize: 24 }]}>
-                  {tile.icon} {tile.value}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-        {badges.map((b) => (
-          <View key={b} style={styles.badge}>
-            <Text style={{ fontSize: 36 }}>{t.badgeEmoji[b] ?? "🏅"}</Text>
-            <View>
-              <Text style={[type.tag, { color: colors.gold }]}>{t.lesson.newBadge}</Text>
-              <Text style={[type.h2, { fontFamily: font.black }]}>{t.badges[b] ?? b}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-      <View style={styles.footer}>
-        <Button label={t.common.continue} onPress={() => router.back()} />
-      </View>
-    </SafeAreaView>
-  );
-}
-
 export default function PhaseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { path, business, student, completePhase } = useSession();
-  const [done, setDone] = useState<{ progress: Progress; before: Progress; badges: string[] } | null>(null);
+  const [done, setDone] = useState<{ progress: Progress; before: Progress; badges: string[]; accuracy: string } | null>(null);
   const { error, run } = useCall();
   const phase = path?.phases.find((p) => String(p.id) === id);
+  const key = phase?.key ?? "";
+  const idea = business?.idea ?? null;
+
+  const steps = useMemo(() => {
+    const learn = LESSONS[key] ?? [];
+    // After the general example (oranges, cakes), the same idea with the kid's own business.
+    const at = learn.findIndex((s) => s.id === "learn") + 1;
+    // Practice games use their version reworded around the idea, once it's ready.
+    const games = idea ? learn.map((s) => withIdea(s, key)) : learn;
+    const lesson = idea && at > 0 ? [...games.slice(0, at), personal("mine", key), ...games.slice(at)] : games;
+    return [...lesson, ...(MISSIONS[key] ?? [])];
+    // Built once per lesson: an idea change mid-lesson (Validate) must not restart it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  // Start making the personal example now, so it's ready when the kid reaches it.
+  useEffect(() => {
+    if (!business || !idea || !key) return;
+    void loadPersonal(business.id, key, idea);
+    const games = (LESSONS[key] ?? []).flatMap((s) => (s.game ? [{ id: s.id, kind: s.game.kind, spec: s.game.spec }] : []));
+    void loadPersonalGames(business.id, key, idea, games);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
 
   if (!phase || !business || !student) return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
-  if (done) return <Celebration {...done} />;
+  if (done) {
+    return (
+      <Celebration
+        title={t.lesson.complete}
+        tiles={[
+          { label: t.lesson.seedsEarned, value: `+${done.progress.seeds - done.before.seeds}`, icon: "🌱", color: colors.good },
+          { label: t.lesson.accuracy, value: done.accuracy, icon: "🎯", color: colors.blue },
+          { label: t.lesson.streak, value: String(done.progress.streak), icon: "🔥", color: colors.retry },
+        ]}
+        badges={done.badges}
+        onContinue={() => router.back()}
+      />
+    );
+  }
 
   const before = student.progress;
-  const steps = [...(LESSONS[phase.key] ?? []), ...(MISSIONS[phase.key] ?? [])];
 
   return (
     <>
       <Lesson
         steps={steps}
+        topic={`${phase.title}: ${phase.mission}`}
         onClose={() => router.back()}
-        onDone={async (state) => {
+        // Demo/testing only: never shown in a production build, so kids can't skip validation.
+        onSkip={
+          __DEV__
+            ? async () => {
+                await run(() => completePhase(phase.id, { skippedForDemo: true }));
+                router.back();
+              }
+            : undefined
+        }
+        onDone={async (state, stats) => {
           const r = await run(() => completePhase(phase.id, (state.result as Record<string, unknown>) ?? {}));
-          if (r) setDone({ progress: r.progress, before, badges: r.newBadges });
+          const accuracy = stats.checked ? `${Math.round((stats.firstTry / stats.checked) * 100)}%` : "—";
+          if (r) setDone({ progress: r.progress, before, badges: r.newBadges, accuracy });
         }}
       />
       {error ? (
@@ -113,12 +121,3 @@ export default function PhaseScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 16 },
-  tile: { width: 130, borderRadius: 16, borderWidth: 2, overflow: "hidden" },
-  tileInner: { backgroundColor: colors.bg, borderRadius: 14, alignItems: "center", paddingVertical: 14 },
-  badge: { flexDirection: "row", alignItems: "center", gap: 14, marginTop: 20, borderWidth: 2, borderColor: colors.gold, borderRadius: 16, paddingHorizontal: 18, paddingVertical: 12 },
-  footer: { borderTopWidth: 2, borderColor: colors.line, padding: 16, maxWidth: 640, width: "100%", alignSelf: "center" },
-});

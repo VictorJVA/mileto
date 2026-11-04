@@ -3,9 +3,11 @@
 // app and tests run offline and without spending credits.
 
 import { mock } from "./mock.js";
+import { normalizeWav } from "./wav.js";
 
 export const MODELS = {
-  spark: process.env.META_SPARK_MODEL ?? "muse-spark-1.3",
+  // 1.1 with minimal reasoning answers short kid-facing JSON in about 4 s (1.3 takes 5-8 s).
+  spark: process.env.META_SPARK_MODEL ?? "muse-spark-1.1",
   // 1.3 does not fully support audio input; 1.2 is the documented choice for audio.
   sparkAudio: process.env.META_SPARK_AUDIO_MODEL ?? "muse-spark-1.2",
   transcribe: process.env.META_TRANSCRIBE_MODEL ?? "muse-voice-transcribe-1.0",
@@ -14,7 +16,11 @@ export const MODELS = {
 } as const;
 
 const BASE_URL = process.env.META_API_BASE_URL ?? "https://api.meta.ai/v1";
-const TIMEOUT_MS = Number(process.env.META_TIMEOUT_MS ?? 20_000);
+const TIMEOUT_MS = Number(process.env.META_TIMEOUT_MS ?? 30_000);
+// Muse Spark always reasons; reasoning tokens count against max_completion_tokens, so the limit must
+// leave room for them or the reply comes back empty (finish_reason "length").
+const REASONING_EFFORT = process.env.META_REASONING_EFFORT ?? "minimal";
+const MAX_COMPLETION_TOKENS = Number(process.env.META_MAX_COMPLETION_TOKENS ?? 3000);
 
 export function isMockMode(): boolean {
   return process.env.META_MOCK === "1" || !process.env.MODEL_API_KEY;
@@ -65,18 +71,23 @@ export async function chatJson(opts: {
     body: JSON.stringify({
       model: opts.model ?? MODELS.spark,
       messages: opts.messages,
-      max_completion_tokens: opts.maxTokens ?? 600,
+      max_completion_tokens: opts.maxTokens ?? MAX_COMPLETION_TOKENS,
+      reasoning_effort: REASONING_EFFORT,
       response_format: { type: "json_schema", json_schema: { name: opts.schemaName, schema: opts.schema } },
     }),
   });
-  const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-  const content = data.choices?.[0]?.message?.content;
-  if (typeof content !== "string") throw new MetaApiError(502, "Meta API returned no message content");
+  const data = (await res.json()) as { choices?: Array<{ finish_reason?: string; message?: { content?: string | null } }> };
+  const choice = data.choices?.[0];
+  const content = choice?.message?.content;
+  if (typeof content !== "string") {
+    throw new MetaApiError(502, `Meta API returned no message content (finish_reason: ${choice?.finish_reason ?? "unknown"})`);
+  }
   return content;
 }
 
 /** Speech to text. Audio must be WAV, mono, 16-bit PCM at 16 or 24 kHz, at most 10 minutes. */
-export async function transcribe(wav: Buffer): Promise<{ transcript: string; audioDurationMs: number | null }> {
+export async function transcribe(input: Buffer): Promise<{ transcript: string; audioDurationMs: number | null }> {
+  const wav = normalizeWav(input);
   if (isMockMode()) return mock.transcribe(wav);
   const form = new FormData();
   form.append(

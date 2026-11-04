@@ -4,9 +4,12 @@ import { t } from "../i18n/en";
 import type { Business } from "../lib/api";
 import { useSession } from "../lib/session";
 import { colors } from "../lib/theme";
+import { useTutorStep } from "../lesson/engine";
 
 /** Header for a real-world mission step: tag, title and Mileto's line. */
 export function MissionHead({ title, say, mood }: { title: string; say?: string; mood?: Mood }) {
+  // The tutor helps with real missions too, using what this screen asks.
+  useTutorStep({ prompt: `Real mission step: ${title}. ${say ?? ""}` });
   return (
     <>
       <Tag color={colors.gold}>🌍 {t.lesson.mission}</Tag>
