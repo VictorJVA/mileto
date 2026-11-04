@@ -4,9 +4,10 @@ import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { t } from "../i18n/en";
-import { ApiError, upload } from "../lib/api";
+import { upload } from "../lib/api";
 import { useSession } from "../lib/session";
 import { colors, type } from "../lib/theme";
+import { errorMessage } from "./ui";
 
 export function PhotoInput<T>({
   label,
@@ -37,7 +38,7 @@ export function PhotoInput<T>({
     try {
       onResult(await upload<T>(endpoint, "image", { uri: asset.uri, name: "photo.jpg", type: asset.mimeType ?? "image/jpeg" }, fields));
     } catch (e) {
-      setError(e instanceof ApiError && e.code === "adult_consent_required" ? t.photo.needsAdult : t.common.offline);
+      setError(errorMessage(e));
     } finally {
       setBusy(false);
     }

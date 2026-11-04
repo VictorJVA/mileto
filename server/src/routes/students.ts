@@ -4,6 +4,7 @@ import { Router } from "express";
 import { z } from "zod";
 import {
   applyEvent,
+  checkpointSeeds,
   completePhase,
   gardenStage,
   PHASES,
@@ -125,6 +126,24 @@ export function studentsRouter(store: Store): Router {
     store.saveProgress(student.id, progress);
 
     res.json({ business: updated, progress: withGarden(progress), newBadges });
+  });
+
+  // World checkpoint: a mixed test at the end of each world. Passing gives bonus seeds and a crown.
+  router.post("/businesses/:id/checkpoints/:world", (req, res) => {
+    const world = z.enum(["seed", "saddlebag", "plaza"]).parse(req.params.world);
+    const { correct, total } = z.object({ correct: z.number().int().nonnegative(), total: z.number().int().positive() }).parse(req.body);
+    const { seeds, passed } = checkpointSeeds(correct, total);
+    const business = businessOr404(req.params.id);
+    const student = studentOr404(business.studentId);
+    const previous = (business.data.checkpoints ?? {}) as Record<string, { correct: number; total: number; passed: boolean }>;
+    const best = previous[world] && previous[world].correct >= correct ? previous[world] : { correct, total, passed };
+    store.updateBusiness({ ...business, data: { ...business.data, checkpoints: { ...previous, [world]: best } } });
+
+    let progress = applyEvent(student.progress, { type: "bonus_seeds", amount: seeds });
+    const newBadges: BadgeType[] = passed && !progress.badges.includes("world_champion") ? ["world_champion"] : [];
+    for (const badge of newBadges) progress = applyEvent(progress, { type: "badge_earned", badge });
+    store.saveProgress(student.id, progress);
+    res.json({ seeds, passed, progress: withGarden(progress), newBadges });
   });
 
   // Learning book: stumbles become hints and earn the Brave Stumble badge.

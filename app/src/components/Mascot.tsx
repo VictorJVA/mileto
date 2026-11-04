@@ -39,7 +39,7 @@ export function Olive({ mood = "curious", size = 88 }: { mood?: Mood; size?: num
     <View style={{ width: size, height: size * 1.25, alignItems: "center", justifyContent: "flex-end" }}>
       {/* Stem and leaf */}
       <View style={{ position: "absolute", top: 2 * s, width: 4 * s, height: 16 * s, backgroundColor: "#5B4325", borderRadius: 2 * s }} />
-      <View style={{ position: "absolute", top: 0, left: size / 2, width: 34 * s, height: 15 * s, backgroundColor: LEAF[mood].color, borderTopLeftRadius: 24 * s, borderBottomRightRadius: 24 * s, transform: [{ rotate: LEAF[mood].rotate }] }} />
+      <View style={{ position: "absolute", top: 2 * s, left: size / 2 - 3 * s, width: 30 * s, height: 13 * s, transformOrigin: "left center", backgroundColor: LEAF[mood].color, borderTopLeftRadius: 24 * s, borderBottomRightRadius: 24 * s, transform: [{ rotate: LEAF[mood].rotate }] }} />
       {/* Body */}
       <View style={{ width: size * 0.82, height: size, borderRadius: size / 2, backgroundColor: "#5E7F2C", borderBottomWidth: 6 * s, borderColor: "#41591D", alignItems: "center", overflow: "hidden" }}>
         <View style={{ position: "absolute", top: 10 * s, left: 12 * s, width: 14 * s, height: 26 * s, borderRadius: 8 * s, backgroundColor: "rgba(255,255,255,0.22)", transform: [{ rotate: "20deg" }] }} />

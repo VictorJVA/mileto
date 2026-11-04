@@ -4,7 +4,17 @@ export const SEEDS_PER_MISSION = 10;
 export const GRACE_DAYS_PER_WEEK = 2;
 
 export type GardenStage = "seed" | "sprout" | "plant" | "tree";
-export type BadgeType = "customer_detective" | "clear_accounts" | "brave_stumble" | "first_sale" | "good_host";
+export type BadgeType = "customer_detective" | "clear_accounts" | "brave_stumble" | "first_sale" | "good_host" | "world_champion";
+
+/** Seeds for a world checkpoint: 2 per correct answer, plus 10 for passing. */
+export const CHECKPOINT_PASS_RATE = 0.7;
+export function checkpointSeeds(correct: number, total: number): { seeds: number; passed: boolean } {
+  if (!Number.isInteger(correct) || !Number.isInteger(total) || total <= 0 || correct < 0 || correct > total) {
+    throw new RangeError("invalid checkpoint score");
+  }
+  const passed = correct / total >= CHECKPOINT_PASS_RATE;
+  return { seeds: correct * 2 + (passed ? 10 : 0), passed };
+}
 
 export interface ProgressState {
   seeds: number;
@@ -30,9 +40,11 @@ export const initialProgress = (): ProgressState => ({
 
 export type ProgressEvent =
   | { type: "mission_completed"; date: string; phase: number }
-  | { type: "badge_earned"; badge: BadgeType };
+  | { type: "badge_earned"; badge: BadgeType }
+  | { type: "bonus_seeds"; amount: number };
 
 export function applyEvent(state: ProgressState, event: ProgressEvent): ProgressState {
+  if (event.type === "bonus_seeds") return { ...state, seeds: state.seeds + Math.max(0, Math.round(event.amount)) };
   if (event.type === "badge_earned") {
     return state.badges.includes(event.badge) ? state : { ...state, badges: [...state.badges, event.badge] };
   }

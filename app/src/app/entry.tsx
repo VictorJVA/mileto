@@ -56,5 +56,5 @@ function Choose() {
 const STEPS: StepDef[] = [{ id: "entry", Component: Choose }];
 
 export default function Entry() {
-  return <Lesson steps={STEPS} onClose={() => router.replace("/")} onDone={() => router.replace("/map")} />;
+  return <Lesson steps={STEPS} topic="Getting started" tutor={false} onClose={() => router.replace("/")} onDone={() => router.replace("/map")} />;
 }

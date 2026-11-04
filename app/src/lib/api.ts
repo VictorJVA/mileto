@@ -1,6 +1,7 @@
 // Client for the Mileto server. The app never talks to Meta directly; keys stay on the server (RNF-07).
 
 import Constants from "expo-constants";
+import { File } from "expo-file-system";
 import { Platform } from "react-native";
 
 const API_PORT = 4000;
@@ -48,16 +49,18 @@ export const post = <T>(path: string, body: unknown = {}) => call<T>(path, { met
 export const request = <T>(path: string, method: "PATCH" | "PUT" | "DELETE", body: unknown = {}) =>
   call<T>(path, { method, body: JSON.stringify(body) });
 
-/** Uploads a local file (photo or recording) as multipart form data. */
+/**
+ * Uploads a local file (photo or recording). On the phone the file is sent as base64 JSON, because
+ * React Native's multipart uploads of local files are unreliable; the web build uses multipart.
+ */
 export async function upload<T>(path: string, field: string, file: { uri: string; name: string; type: string }, extra: Record<string, string> = {}) {
-  const form = new FormData();
-  if (Platform.OS === "web") {
-    const blob = await (await fetch(file.uri)).blob();
-    form.append(field, blob, file.name);
-  } else {
-    // React Native's FormData accepts {uri, name, type} file descriptors.
-    form.append(field, file as unknown as Blob);
+  if (Platform.OS !== "web") {
+    const fileBase64 = await new File(file.uri).base64();
+    return post<T>(path, { ...extra, fileBase64, mimeType: file.type });
   }
+  const form = new FormData();
+  const blob = await (await fetch(file.uri)).blob();
+  form.append(field, blob, file.name);
   for (const [k, v] of Object.entries(extra)) form.append(k, v);
   return call<T>(path, { method: "POST", body: form });
 }

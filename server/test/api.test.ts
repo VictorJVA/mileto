@@ -132,3 +132,115 @@ describe("safety guards", () => {
     expect(containsPersonalData("Sunny Squeeze")).toBe(false);
   });
 });
+
+describe("Socratic tutor", () => {
+  const step = { prompt: "Which store is cheaper?", options: ["Store B: $250 per orange", "Store A: $300 per orange"], answer: "Store B: $250 per orange" };
+
+  it("guides with a question and climbs the hint ladder", async () => {
+    const first = await request(app).post("/api/ai/tutor").send({ topic: "Compare prices", step, history: [], message: "I don't get it" });
+    expect(first.body).toMatchObject({ hintLevel: 1 });
+    expect(first.body.reply).toMatch(/\?/);
+    const third = await request(app)
+      .post("/api/ai/tutor")
+      .send({ topic: "Compare prices", step, message: "still lost", history: [{ role: "kid", text: "?" }, { role: "mileto", text: "hint" }, { role: "kid", text: "??" }, { role: "mileto", text: "hint" }] });
+    expect(third.body.hintLevel).toBe(3);
+  });
+
+  it("refuses financial advice inside lessons", async () => {
+    const r = await request(app).post("/api/ai/tutor").send({ topic: "Two jars", history: [], message: "should I buy bitcoin?" });
+    expect(r.body.reply).toMatch(/adult/);
+  });
+});
+
+describe("revealsAnswer guard", async () => {
+  const { revealsAnswer } = await import("../src/agent/tools.js");
+  const step = { answer: "Something I know how to make that people near me need" };
+  it("catches the answer quoted or paraphrased closely", () => {
+    expect(revealsAnswer("The answer is: something I know how to make that people near me need!", step)).toBe(true);
+    expect(revealsAnswer("Pick what you know how to make and people near you need", step)).toBe(true);
+  });
+  it("allows guiding questions", () => {
+    expect(revealsAnswer("What did we say a seed needs to grow?", step)).toBe(false);
+  });
+});
+
+describe("base64 uploads from the phone", () => {
+  it("accepts a voice note as base64 JSON", async () => {
+    const s = await request(app).post("/api/students").send({ nickname: "Luna", avatar: "olive-2", ageRange: "8-12" });
+    await request(app).post(`/api/students/${s.body.id}/consent`).send({ adultPresent: true });
+    // 0.1 s of silence, 16 kHz mono 16-bit.
+    const data = Buffer.alloc(3200);
+    const header = Buffer.alloc(44);
+    header.write("RIFF", 0, "ascii");
+    header.writeUInt32LE(36 + data.length, 4);
+    header.write("WAVEfmt ", 8, "ascii");
+    header.writeUInt32LE(16, 16);
+    header.writeUInt16LE(1, 20);
+    header.writeUInt16LE(1, 22);
+    header.writeUInt32LE(16000, 24);
+    header.writeUInt32LE(32000, 28);
+    header.writeUInt16LE(2, 32);
+    header.writeUInt16LE(16, 34);
+    header.write("data", 36, "ascii");
+    header.writeUInt32LE(data.length, 40);
+    const wav = Buffer.concat([header, data]).toString("base64");
+    const r = await request(app).post("/api/ai/transcribe").set("x-student-id", s.body.id).send({ fileBase64: wav, mimeType: "audio/wav" });
+    expect(r.status).toBe(200);
+    expect(r.body.transcript).toBeTruthy();
+  });
+});
+
+describe("personalized lessons", () => {
+  let businessId = "";
+  beforeAll(async () => {
+    const s = await request(app).post("/api/students").send({ nickname: "Dani", avatar: "olive-3", ageRange: "13-18" });
+    const b = await request(app).post("/api/businesses").send({ studentId: s.body.id, entry: "has_idea", idea: "Websites for local shops" });
+    businessId = b.body.id;
+  });
+
+  it("writes a text example about the kid's own idea", async () => {
+    const r = await request(app).post("/api/ai/personalize").send({ businessId, phase: "validate" });
+    expect(r.body.lesson.example.title).toMatch(/Websites for local shops/);
+    expect(r.body.lesson.question.options).toHaveLength(3);
+  });
+
+  it("computes money examples in code, never trusting model numbers", async () => {
+    const r = await request(app).post("/api/ai/personalize").send({ businessId, phase: "shopping" });
+    // 12,000 for 1 month vs 96,000 for 12 months = 8,000 per month: code finds the yearly plan cheaper.
+    expect(r.body.lesson.example.result).toMatch(/Host Two is cheaper/);
+    expect(r.body.lesson.question.options[0]).toMatch(/8\.000/);
+    const price = await request(app).post("/api/ai/personalize").send({ businessId, phase: "price" });
+    // (40,000 + 3 × 10,000) ÷ 1 = 70,000 cost; 150,000 − 70,000 = 80,000 profit.
+    expect(price.body.lesson.question.options[0]).toBe("$80.000");
+  });
+
+  it("caches per phase and idea", async () => {
+    const r = await request(app).post("/api/ai/personalize").send({ businessId, phase: "validate" });
+    expect(r.body.cached).toBe(true);
+  });
+
+  it("returns nothing before the kid has an idea", async () => {
+    const s = await request(app).post("/api/students").send({ nickname: "Nico", avatar: "olive-1", ageRange: "8-12" });
+    const b = await request(app).post("/api/businesses").send({ studentId: s.body.id, entry: "no_idea" });
+    const r = await request(app).post("/api/ai/personalize").send({ businessId: b.body.id, phase: "discover" });
+    expect(r.body.lesson).toBeNull();
+  });
+});
+
+describe("personalized practice games", () => {
+  it("rewords games for the idea and drops any that change the answer key", async () => {
+    const s = await request(app).post("/api/students").send({ nickname: "Dani", avatar: "olive-3", ageRange: "13-18" });
+    const b = await request(app).post("/api/businesses").send({ studentId: s.body.id, entry: "has_idea", idea: "Websites for local shops" });
+    const games = [
+      { id: "q", kind: "quiz", spec: { prompt: "Which seed grows best?", options: ["Ask people first", "Buy lots of stuff", "Guess and hope"], answer: 0, explain: "Because." } },
+      { id: "s", kind: "sort", spec: { prompt: "Which jar?", bins: [{ id: "business", label: "Business", emoji: "🍊" }, { id: "personal", label: "Me", emoji: "🍬" }], items: [{ label: "Oranges", bin: "business" }, { label: "Candy", bin: "personal" }] } },
+      { id: "l", kind: "lightning", spec: { prompt: "True or false?", statements: [{ text: "x", truth: true, why: "y" }, { text: "z", truth: false, why: "w" }] } },
+    ];
+    const r = await request(app).post("/api/ai/personalize-games").send({ businessId: b.body.id, phase: "capital", games });
+    expect(r.body.games.q.prompt).toMatch(/Websites for local shops/);
+    expect(r.body.games.q.answer).toBe(0);
+    expect(r.body.games.s.bins).toHaveLength(2);
+    // The mock flipped a true/false answer: that game must not be used.
+    expect(r.body.games.l).toBeUndefined();
+  });
+});

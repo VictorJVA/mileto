@@ -66,6 +66,40 @@ const fixtures: Record<string, (messages: ChatMessage[]) => unknown> = {
       closed: /want|quiere|would you|te provoca|llevas/.test(t),
     };
   },
+  tutor_reply: (m) => {
+    const level = Number(String(m[0]?.content).match(/Hint level: (\d)/)?.[1] ?? 1);
+    const replies = [
+      "Great question! Think back to the idea we just learned. What was it like?",
+      "Look closely at the question: which part matters most for the person buying?",
+      "Let's try a different one together: if 10 stickers cost 2,000, what does ONE cost? Now try yours the same way!",
+    ];
+    return { reply: replies[Math.min(level, 3) - 1] };
+  },
+  personal_text: (m) => {
+    const idea = String(m[m.length - 1]?.content).match(/business idea: ([^.]+)\./)?.[1] ?? "your idea";
+    return {
+      example: { title: `Thinking about ${idea}`, steps: ["You already know how to do it.", "People near you need it.", "You can start small."], result: `${idea} is a good seed!` },
+      question: { prompt: `Why could ${idea} work?`, correct: "People near me need it and I can make it", wrong: ["Because it is the most expensive", "Because nobody has asked for it"], explain: "Good ideas meet a real need with what you can already do." },
+    };
+  },
+  // Mock rewrite: keeps each game and puts the idea in its prompt; one game breaks its answer key on
+  // purpose so tests prove the server drops it.
+  personal_games: (m) => {
+    const text = String(m[m.length - 1]?.content);
+    const idea = text.match(/business idea: ([^.]+)\./)?.[1] ?? "your idea";
+    const games = JSON.parse(text.slice(text.indexOf("Games:\n") + 7)) as Array<{ id: string; kind: string; spec: Record<string, unknown> }>;
+    return {
+      games: games.map((g) => {
+        const spec: Record<string, unknown> = { ...g.spec, prompt: `${String(g.spec.prompt)} (${idea})` };
+        if (g.kind === "lightning") (spec.statements as Array<{ truth: boolean }>)[0].truth = !(spec.statements as Array<{ truth: boolean }>)[0].truth;
+        delete spec.bins;
+        return { id: g.id, spec };
+      }),
+    };
+  },
+  personal_shopping: () => ({ material: "domain name", unit: "month", storeA: { name: "Host One", packSize: 1, price: 12000 }, storeB: { name: "Host Two", packSize: 12, price: 96000 } }),
+  personal_price: () => ({ product: "website", unit: "website", materials: [{ name: "domain", quantity: 1, unitCost: 40000 }, { name: "hosting month", quantity: 3, unitCost: 10000 }], units: 1, price: 150000 }),
+  personal_cashbox: () => ({ product: "websites", unit: "website", unitsAtOpen: 5, unitsAtClose: 3, price: 150000 }),
   mascot_line: () => ({ text: "How do you know someone would buy it? Let's ask first, then decide!" }),
   pitch_feedback: () => ({
     strength: "You explained clearly who your juice is for.",
