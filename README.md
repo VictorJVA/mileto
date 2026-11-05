@@ -77,7 +77,7 @@ npm run web        # terminal 2 → opens the app in the browser
 
 ### Jump straight to any feature: 🎬 Demo scenes
 
-The **demo** branch adds a 🎬 button (on the first screen, the entry screen and the map). Each button creates a fresh player, *Sofi*, who sells custom stickers, with the earlier phases already done, and opens the app right at that scene. The scene itself runs the real app and the real models.
+A 🎬 button (on the first screen, the entry screen and the map) opens the demo scenes. Each button creates a fresh player, *Sofi*, who sells custom stickers, with the earlier phases already done, and opens the app right at that scene. The scene itself runs the real app and the real models.
 
 | Scene | What to try |
 | --- | --- |
