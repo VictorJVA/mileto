@@ -54,44 +54,82 @@ All calls go through [`server/src/meta/client.ts`](server/src/meta/client.ts). A
 
 ## Try it in 5 minutes
 
-You need **Node 22.13 or later** (for the built-in `node:sqlite`). An iPhone with **Expo Go** is optional: the web version runs everything except the microphone and camera, so typing replaces the voice and you pick photos from files.
+### 1. What you need
+
+- **Node.js 22.13 or later.** Check with `node -v`, and get it at [nodejs.org](https://nodejs.org) if needed. It works on macOS, Linux and Windows.
+- **A browser** is enough to try everything. With the web version, typing replaces the voice and you pick photos from files; sample photos are in [`docs/samples/`](docs/samples).
+- **Optional: an iPhone with [Expo Go](https://apps.apple.com/app/expo-go/id982107779)** for the real camera and microphone. It must be on the same Wi-Fi as the computer.
+- **Optional: a Meta Model API key** from [dev.meta.ai](https://dev.meta.ai). Without one, Mileto runs on free mock models.
+
+### 2. Install
 
 ```sh
 git clone https://github.com/VictorJVA/mileto.git
 cd mileto
-npm run setup      # installs server and app, creates server/.env
+npm run setup
 ```
 
-**Choose how the models run** by editing `server/.env`:
+`setup` checks your Node version, installs the server and the app, and creates `server/.env`.
 
-- **Leave `MODEL_API_KEY` empty** to use free **mock models**: fixed answers that follow the demo story, so no key and no cost.
-- **Paste your Meta Model API key** to use the real models.
+### 3. Choose mock or real models
 
-Then open two terminals:
+The `server/.env` file decides which models run:
+
+- **Mock (default, free):** leave `MODEL_API_KEY=` empty. Every model call returns a fixed answer that follows the demo story, so you can try the whole app without a key.
+- **Real Meta models:** set `MODEL_API_KEY=your_key`. Mileto then calls Muse Spark, Voice Transcribe, SAM 3.1 and Muse Image for real.
+
+### 4. Run it (two terminals, both in the `mileto` folder)
 
 ```sh
-npm run server     # terminal 1 → http://localhost:4000 (GET /health shows mock or real)
-npm run web        # terminal 2 → opens the app in the browser
-# or: npm run app  → scan the QR code with an iPhone in Expo Go (same Wi-Fi as the computer)
+npm run server     # terminal 1
+npm run web        # terminal 2 (or: npm run app, then scan the QR code with the iPhone camera)
 ```
+
+**You should see:**
+
+- Terminal 1 prints `Mileto server on http://localhost:4000 (mock models)`, or `(Meta Model API)` when using a key.
+- Opening http://localhost:4000/health shows `{"ok":true,"mockModels":true}`.
+- The browser opens the app, and Mileto the olive says hi.
+
+### 5. Take the tour
+
+1. **Onboarding:** pick any nickname, an olive and an age.
+2. **"Is an adult with you?":** tick the box and tap **Unlock camera and mic**. Without this, photos and voice stay locked by design: an adult must be present.
+3. **Entry:** choose *"I don't know what to sell"* to start from zero, or *"I have an idea"* and type one (for example *Websites for local shops*) to see every lesson rewritten around it.
+4. **The map:** tap the glowing node and then **Start**. Each lesson goes story, explanation, games, recap, and then the real mission.
+5. **Mileto the tutor:** tap the olive in the bottom corner at any time and ask for a hint.
 
 ### Jump straight to any feature: 🎬 Demo scenes
 
-A 🎬 button (on the first screen, the entry screen and the map) opens the demo scenes. Each button creates a fresh player, *Sofi*, who sells custom stickers, with the earlier phases already done, and opens the app right at that scene. The scene itself runs the real app and the real models.
+A 🎬 button (on the first screen, the entry screen and the map) opens the demo scenes. Each one creates a fresh player, *Sofi*, who sells custom stickers, with the earlier phases already done, and opens the app right at that scene. The scene itself runs the real app and whichever models you chose.
 
-| Scene | What to try |
+| Scene | What to try | Sample file |
+| --- | --- | --- |
+| Entry screen | The three ways in | |
+| Tell Mileto · 3 ideas | Say or type *"I like drawing and I have a tablet"* | |
+| 4 questions · Business card | The idea check and the why/how/what card | |
+| Interviews | Record or type 3–5 answers, like *"Yes, I'd pay 2000"*, and see each one tagged | |
+| Two labels | One price-label photo per store, then quality, delivery and minimum order | [`price-label-corner-shop.jpg`](docs/samples/price-label-corner-shop.jpg), [`price-label-market.jpg`](docs/samples/price-label-market.jpg) |
+| Poster · Sale | Muse Image poster (~20 s), then answer *"That's expensive!"* | |
+| Cash box | Opening and closing photos: SAM counts them. Then type *"I sold fourteen"*. Or tap *"Selling a service instead?"* | [`cashbox-open-20.jpg`](docs/samples/cashbox-open-20.jpg), [`cashbox-close-6.jpg`](docs/samples/cashbox-close-6.jpg) |
+| Tutor | Tap the olive and ask for a hint three times to see the whole ladder | |
+| Decide · Garden | Scenarios and two jars; write a stumble to earn *Brave Stumble* | |
+
+The sample photos give exact results with real models (SAM counts 20 and 6; Muse Spark reads $6.000 for 5 sheets and $10.000 for 10). In mock mode, photo results are fixed.
+
+**Teacher dashboard:** run `npm run seed` once, then open http://localhost:4000/teacher/ (class `DEMO1`). Opening any demo scene also creates the sample class.
+
+### If something goes wrong
+
+| Problem | Fix |
 | --- | --- |
-| Entry screen | The three ways in |
-| Tell Mileto · 3 ideas | Say or type *"I like drawing and I have a tablet"* |
-| 4 questions · Business card | The idea check and the why/how/what card |
-| Interviews | Record or type 3–5 answers and see each one tagged |
-| Two labels | Two price-label photos, then quality, delivery and minimum order |
-| Poster · Sale | Muse Image poster, then answer *"That's expensive!"* |
-| Cash box | Photos with objects spread on a table: SAM counts them. Or tap *"Selling a service instead?"* |
-| Tutor | Tap the olive and ask for a hint three times to see the whole ladder |
-| Decide · Garden | Scenarios and two jars; write a stumble to earn *Brave Stumble* |
-
-**Teacher dashboard:** open http://localhost:4000/teacher/ (run `npm run seed` first for a sample class, `DEMO1`).
+| `npm run setup` says Node is too old | Install Node 22.13 or later from [nodejs.org](https://nodejs.org) |
+| *"I can't reach the server"* in the app | Check that `npm run server` is still running in terminal 1 |
+| The iPhone can't reach the server | Use the same Wi-Fi as the computer and allow incoming connections for Node in the firewall. Some networks (schools, hotels) block devices from seeing each other: share a hotspot from the phone, or use `npm run web` |
+| Port 4000 is already in use | Stop the other process, or set `PORT=4001` in `server/.env` and start the app with `EXPO_PUBLIC_API_URL=http://localhost:4001 npm run web` |
+| The photo buttons say an adult must unlock them | On the map, tap *"Ask an adult to unlock the camera and mic"* |
+| *"My olive brain is busy"* with a real key | The Meta API returned an error; the server terminal prints the exact reason |
+| SAM counts 0 objects | Spread the objects apart on a plain table, or change the word in *"What are you counting?"* (for example *round sticker*) |
 
 ## Tests and evaluation
 
