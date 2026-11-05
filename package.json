@@ -1,0 +1,14 @@
+{
+  "name": "mileto",
+  "private": true,
+  "description": "Mileto: kids learn to start a business by doing it. Expo app + Express server on Meta models.",
+  "scripts": {
+    "setup": "npm --prefix server install && npm --prefix app install && cp -n server/.env.example server/.env || true",
+    "server": "npm --prefix server run dev",
+    "app": "npm --prefix app start",
+    "web": "npm --prefix app run web",
+    "seed": "npm --prefix server run seed",
+    "test": "npm --prefix server test",
+    "typecheck": "npm --prefix server run typecheck && npm --prefix app run typecheck"
+  }
+}

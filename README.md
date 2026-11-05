@@ -1,142 +1,158 @@
-# Mileto
+# Mileto 🫒
 
-**Mileto teaches kids to start a business by doing it.** The camera and voice check each mission, and code calculates every number. It is not a chatbot.
+**Kids learn to start a business by doing it.** Mileto takes a kid from *"I don't know what to sell"* to selling, keeping accounts and deciding what's next. A curious little olive guides every step, and he never hands over the answer. Every mission is checked with the camera and the voice, and every number is calculated by code, not by a model.
 
-Mileto is an iPhone app for kids aged 8 to 18 in rural towns. It takes them from "I don't know what to sell" to selling, keeping accounts and deciding what to do next. The guide is Mileto, a curious little olive. The name comes from Thales of Miletus, who, as the story goes, foresaw a good olive harvest and rented the presses before anyone else.
+Built for the **Meta Global AI Developer Hackathon** (theme: *Build for Your World*) with **Muse Spark, Muse Voice Transcribe, SAM 3.1 and Muse Image**.
 
-Built for the Meta Global AI Developer Hackathon (theme: *Build for Your World*).
+▶️ **Demo video:** _link in the submission_ · 🧪 **Try it in 5 minutes:** [jump to setup](#try-it-in-5-minutes)
 
-## The problem
+<p align="center">
+  <img src="docs/screens/welcome.png" width="200" alt="Mileto welcomes the kid" />
+  <img src="docs/screens/tutor.png" width="200" alt="Mileto's clue: a guiding question, never the answer" />
+  <img src="docs/screens/sam-count.png" width="200" alt="SAM 3.1 counts the stickers one by one" />
+  <img src="docs/screens/celebration.png" width="200" alt="Lesson complete with the Clear Accounts badge" />
+</p>
 
-Kids in small towns rarely have anyone to show them how to turn an idea into income. The most common reason startups fail is that nobody needed the product: CB Insights found it in 42% of 101 startup post-mortems. So Mileto makes kids **validate before they spend**.
+## Why
 
-## How it works
+Kids in small towns rarely have anyone to show them how to turn a talent into income. And when people do start, the most common reason startups fail is that nobody needed the product: CB Insights found it in 42% of 101 startup post-mortems. So Mileto's rule is **validate before you spend**: *first we look, then we decide.*
 
-One path with 12 phases in 3 worlds. Kids can enter from three points, and finishing phase 12 loops back to validation.
+It works for any kind of small business: stickers, tutoring, dog walking, snacks, websites.
 
-| World | Phases | What the kid learns |
-| --- | --- | --- |
-| 🌱 The Seed | 1 Discover · 2 Choose · 3 Golden circle · 4 Validate | Spot opportunities and check that someone wants the idea |
-| 🎒 The Saddlebag | 5 Shopping · 6 Capital · 8 Price | Costs, prices and keeping business money apart from their own |
-| 🏪 The Plaza | 7 Test batch · 9 Brand · 10 Sales · 11 Cash box · 12 Decide & pitch | Test small, get known, sell, keep accounts, learn from mistakes |
+## What a kid does
 
-The three entry points are *I don't know what to sell*, *I have an idea* and *I already sell something*. On every path, kids must complete phase 4 (validation).
+The path has 12 phases in 3 worlds: 🌱 *The Seed* (ideas), 🎒 *The Saddlebag* (resources) and 🏪 *The Plaza* (selling). Here is Sofi's path through it:
 
-Each phase is a real lesson, one screen at a time, built on how kids learn best:
+1. **Find an idea.** Sofi taps *"I don't know what to sell"* and tells Mileto out loud (even in Spanish) that she loves drawing and has a tablet. Mileto summarizes what she has and knows, and proposes three ideas. A four-question check picks *custom stickers*. Her why, how and what become a business card. She hasn't spent a cent.
+2. **Validate before spending.** She does five voice interviews with people she knows. The app transcribes them and tags every answer, then **code** counts who would buy (*"3 of 5 would buy"*) and works out the price range.
+3. **Buy smart.** She takes a photo of two price labels, and code compares the price per unit. Cheapest isn't always best, so Mileto then asks about quality, delivery time and minimum order before she picks a supplier.
+4. **Price it.** Code calculates the cost of one sticker, the profit and the break-even point.
+5. **Brand and sell.** Muse Image paints the poster, and the app prints the name and price on top so they are always readable. She practices with a simulated customer who says *"That's expensive!"* and answers out loud. A fixed rubric in code scores the talk: one thing she did well, one thing to improve.
+6. **Count the cash box.** She takes a photo at opening and at closing, and **SAM 3.1 counts the stickers one by one** on screen: *"I see 20. Is that right?"* At closing there are 6, so 14 were sold, and her voice note confirms it, which earns the *Clear Accounts* badge. For a service like tutoring, she just says how many sessions she did.
+7. **Decide.** Code simulates three options: repeat, change the price or save part. They are labeled as hypotheses, not promises. Then she splits the profit into two jars (business and personal). A mistake written in the learning book earns the *Brave Stumble* badge.
 
-1. **Hook**: a short story where a kid like them hits the problem (Mateo wants a football, Lina bakes 50 cupcakes nobody buys…).
-2. **Explain**: the idea in bite-size cards, an everyday analogy (an idea is a seed, price vs. cost is a scale, two jars for money) and a worked example solved step by step.
-3. **Practice**: varied games, from recognizing to producing: picture choice, quiz, fill in the blank, put steps in order, true/false lightning round, match pairs, sort into bins, a price balance. A wrong answer is never punished: Mileto explains, and the question comes back at the end. Three right in a row lights a combo.
-4. **Now with YOUR idea**: once the kid has an idea, Mileto rewrites the worked example and one question around their own business. A kid building websites learns cost per unit with domains and hosting, not oranges. For money lessons the model only proposes example inputs (materials, packs, counts), and the server's code computes every number shown. The practice games are reworded around their idea too ("Which jar pays for the hosting?"). The server checks each reworded game keeps exactly the same answer key (same correct option, true/false values, bins and order) and drops any that don't. Calculation questions are never reworded, because their numbers must come from code. Each one is generated once per phase and idea, then cached.
-5. **Recap**: what they learned, in three lines.
-6. **Do**: the real mission, which gets checked:
+Every phase is a short lesson before the real mission. It opens with a **story** that hooks the kid, then explanation cards with an **analogy and a worked example**, then **games** (pictures, fill in the blank, put in order, true/false, match pairs, sort into bins, a price balance) and a **recap**. Once the kid has an idea, the example and the games are **rewritten around their own business**.
 
-- **Validate**: 5 voice interviews. The model tags each answer, and code counts who would buy and works out the price range.
-- **Shopping**: price-tag photos from two stores. The model reads them, the kid confirms each value, and code finds the cheaper store per unit.
-- **Brand**: Muse Image draws the poster art. The app adds the name, slogan and price on top, so the text is always readable.
-- **Sales**: the kid practices with a simulated customer who objects ("that's expensive"), for at most 3 turns. A fixed rubric in code scores the conversation.
-- **Cash box**: SAM 3.1 counts the products in an opening and a closing photo. The kid confirms ("I see 20, is that right?"). Code works out sales and revenue and checks them against what the kid says out loud.
-- **Decide**: code simulates three scenarios that are labeled as guesses, not promises. The kid splits the profit into two jars and pitches by voice.
+## Why it is not a chatbot
 
-**Mileto the tutor** is on every lesson screen. Kids can ask by voice or text ("give me a hint", "why was I wrong?"). He is Socratic: he answers with guiding questions and a hint ladder (a nudge, then a pointer, then a similar example with different numbers), and never gives the answer. A code guard on the server blocks any reply that repeats the correct answer.
-
-**World tests**: a trophy at the end of each world unlocks a short mixed test of that world's questions, with no tutor and no repeats. Passing (70%) earns bonus seeds and the World Champion crown.
-
-**Progress** works like Duolingo but is gentler: a garden that grows, seeds, and a streak with 2 grace days a week. Missing a day never costs anything. Badges reward real habits (*Customer Detective*, *Clear Accounts*, *Brave Stumble*), and a learning book turns mistakes into clues.
-
-**Teachers** get a web dashboard at `/teacher` showing where each student is on the path and where the class gets stuck.
+- **Missions are verified in the real world.** The camera counts products and reads price tags, the voice is transcribed, and the kid confirms every reading.
+- **Code computes every number.** Models read, listen, tag and talk. Costs, profits, counts, price comparisons and scores all come from tested code. Model output must match a JSON schema, or it is retried and then the kid is asked to confirm.
+- **A Socratic tutor, not an answer machine.** Mileto the olive floats on every lesson screen; the kid can ask him by voice or text. He answers with a hint ladder (a nudge, then a pointer, then a similar example with different numbers), and his clue is pinned at the top of the exercise. A server-side guard blocks any reply that repeats the correct answer. On a first wrong answer the app gives a nudge instead of the solution, and the question comes back later.
+- **Personalized, with an answer key that can't drift.** When games are reworded around the kid's idea, the server checks each one keeps exactly the same answer key (correct option, true/false values, bins, order), and drops any that don't. Calculation questions are never reworded.
+- **Progress like Duolingo, but gentle.** A growing garden, seeds, a streak with two grace days a week and badges for real habits. World tests unlock a crown. There are no hearts, no leaderboards and no punishment for missing a day.
 
 ## Meta models
 
-| Model | Used for | Where |
+| Model | What it does in Mileto | Measured |
 | --- | --- | --- |
-| Muse Spark (`muse-spark-1.3`) | Mascot lines, reading price photos, tagging interviews and sales talks, brand ideas, the simulated customer, pitch feedback | `server/src/agent/tools.ts` |
-| Muse Voice Transcribe (`muse-voice-transcribe-1.0`) | Interviews, opinions, sales replies, pitch | `POST /v1/asr/transcribe` |
-| SAM 3.1 (`sam-3.1`) | Counting products in cash-box photos | `POST /v1/responses`, parsed in `server/src/meta/client.ts` |
-| Muse Image (`muse-image-1.0`) | Poster art | `POST /v1/images/generations` |
+| **Muse Spark** (`muse-spark-1.1`, `reasoning_effort: minimal`) | Ideas and skills summary, reading price labels, tagging interviews and sales talks, the simulated customer, the Socratic tutor, brand names, personalized examples and games | ~2–4 s per reply (1.3 took 5–17 s for the same prompts) |
+| **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Interviews, answers, sales practice, pitch, questions to the tutor | ~2 s. iPhone audio is converted to 16 kHz mono WAV on the server, since the API only takes 16 or 24 kHz |
+| **SAM 3.1** (`sam-3.1`) | Counting products in the opening and closing cash-box photos; the app draws each detection | 20/20 and 6/6 on our test photos, 1–2 s |
+| **Muse Image** (`muse-image-1.0`) | Poster art, with no text in the image | ~20 s |
 
-**Rule:** the model reads, listens, tags and talks, and code does all the math. Model output must be JSON that matches a schema. If it fails, the call is retried once, and then the app asks the kid to say or type the value.
+All calls go through [`server/src/meta/client.ts`](server/src/meta/client.ts). API keys live only on the server and never reach the phone.
 
-## Architecture
+## Try it in 5 minutes
 
-```
-iPhone (Expo)  ──photos/voice──▶  Express server  ──▶  Meta Model API
-  captures only                   validates, computes,      (keys live here only)
-                                  stores results in SQLite
-Teacher web page  ◀───────────────┘
-```
-
-- `app/`: React Native with Expo SDK 58 and Expo Router, in TypeScript. Missions are in `app/src/missions/`, and all UI copy is in `app/src/i18n/en.ts`.
-- `server/`: Express 5 with TypeScript.
-  - `src/core/`: pure calculation modules (costs, cash box, scenarios, jars, progress, rubric, path), covered by tests.
-  - `src/agent/`: agent tools, mascot persona and safety guards.
-  - `src/meta/`: Meta API client, plus a mock mode for running offline.
-  - `src/db/`: SQLite through `node:sqlite`.
-  - `public/teacher/`: the teacher dashboard.
-
-## Run it
-
-You need Node 22.13 or later (built-in `node:sqlite`) and the Expo Go app on an iPhone.
+You need **Node 22.13 or later** (for the built-in `node:sqlite`). An iPhone with **Expo Go** is optional: the web version runs everything except the microphone and camera, so typing replaces the voice and you pick photos from files.
 
 ```sh
-# 1. Server
-cd server
-npm install
-cp .env.example .env        # add MODEL_API_KEY, or leave it empty to use mock models
-npm run seed                # optional: sample class DEMO1 for the teacher dashboard
-npm run dev                 # http://localhost:4000, teacher view at /teacher/
-
-# 2. App
-cd ../app
-npm install
-                            # the app finds the server on this computer automatically (port 4000)
-npx expo start              # scan the QR code with the iPhone camera to open Expo Go
+git clone https://github.com/VictorJVA/mileto.git
+cd mileto
+npm run setup      # installs server and app, creates server/.env
 ```
 
-Without `MODEL_API_KEY` the server runs on **mock models** with fixed answers that follow the demo story, so the whole path can be tried for free. `GET /health` shows which mode is active.
+**Choose how the models run** by editing `server/.env`:
 
-Voice recording uses WAV (16 kHz mono) on iOS. On web and Android, kids can type instead.
+- **Leave `MODEL_API_KEY` empty** to use free **mock models**: fixed answers that follow the demo story, so no key and no cost.
+- **Paste your Meta Model API key** to use the real models.
+
+Then open two terminals:
+
+```sh
+npm run server     # terminal 1 → http://localhost:4000 (GET /health shows mock or real)
+npm run web        # terminal 2 → opens the app in the browser
+# or: npm run app  → scan the QR code with an iPhone in Expo Go (same Wi-Fi as the computer)
+```
+
+### Jump straight to any feature: 🎬 Demo scenes
+
+The **demo** branch adds a 🎬 button (on the first screen, the entry screen and the map). Each button creates a fresh player, *Sofi*, who sells custom stickers, with the earlier phases already done, and opens the app right at that scene. The scene itself runs the real app and the real models.
+
+| Scene | What to try |
+| --- | --- |
+| Entry screen | The three ways in |
+| Tell Mileto · 3 ideas | Say or type *"I like drawing and I have a tablet"* |
+| 4 questions · Business card | The idea check and the why/how/what card |
+| Interviews | Record or type 3–5 answers and see each one tagged |
+| Two labels | Two price-label photos, then quality, delivery and minimum order |
+| Poster · Sale | Muse Image poster, then answer *"That's expensive!"* |
+| Cash box | Photos with objects spread on a table: SAM counts them. Or tap *"Selling a service instead?"* |
+| Tutor | Tap the olive and ask for a hint three times to see the whole ladder |
+| Decide · Garden | Scenarios and two jars; write a stumble to earn *Brave Stumble* |
+
+**Teacher dashboard:** open http://localhost:4000/teacher/ (run `npm run seed` first for a sample class, `DEMO1`).
 
 ## Tests and evaluation
 
 ```sh
-cd server
-npm test                    # 71 tests: calculations, API end to end, SAM parsing, safety guards
-npm run eval -- limits      # accuracy suites: count | receipts | voice | limits
+npm test                                   # 89 tests: calculations, API end to end, safety, SAM parsing, WAV conversion, personalization
+npm run typecheck                          # server and app
+npm --prefix server run eval -- limits     # accuracy suites: count | receipts | voice | limits
 ```
 
-| Test | Target | Result |
+| What | Target | Result so far |
 | --- | --- | --- |
-| Calculations (unit + API tests) | 100% | ✅ 71/71 passing |
-| Model limits (refuses financial advice) | 0 personal advice | ✅ 5/5 refused (code guard) |
-| Object counting (SAM 3.1), 20 photos | 90% exact | _pending real samples_ |
-| Receipt / label reading, 15 photos | 90% of prices | _pending_ |
-| Colombian Spanish voice, 20 notes | 90% of numbers | _pending_ |
-| Mascot response time | < 5 s | _pending_ |
+| Calculations (unit and API tests) | 100% | ✅ 89/89 passing |
+| Refusing personal financial advice | 0 answers | ✅ 5/5 refused by the code guard |
+| Tutor never reveals the answer | 0 leaks | ✅ server guard tested on direct and paraphrased answers |
+| SAM 3.1 object counting | 90% exact | ✅ 2/2 test photos exact (20 and 6). A larger set of real photos is still to run |
+| Spanish voice to text | 90% of numbers | ✅ correct on our test recordings (16 and 44.1 kHz). A larger accent set is still to run |
+| Reply time | under 5 s | ✅ 2–4 s for Muse Spark and voice; the poster takes ~20 s |
+
+## Architecture
+
+```
+iPhone or web (Expo)  ──photo / voice / text──▶  Express server  ──▶  Meta Model API
+  captures, shows                                 validates JSON,       (keys live here only)
+                                                  computes every number,
+                                                  stores results (SQLite)
+Teacher web page  ◀────────────────────────────────┘
+```
+
+- [`app/`](app): React Native with Expo SDK 58 and Expo Router, in TypeScript.
+  - Lessons: [`src/lesson/`](app/src/lesson), with the engine, step types, content and the tutor.
+  - Missions: [`src/missions/`](app/src/missions).
+  - All copy: [`src/i18n/en.ts`](app/src/i18n/en.ts).
+- [`server/`](server): Express 5 with TypeScript.
+  - [`src/core/`](server/src/core): pure, tested calculations (costs, cash box, scenarios, jars, progress, rubric, path).
+  - [`src/agent/`](server/src/agent): tools, the tutor, personalization and safety guards.
+  - [`src/meta/`](server/src/meta): the Meta API client, WAV conversion and mock mode.
 
 ## Child safety and privacy
 
-- **Minimal data.** The app stores a nickname, an avatar and an age range only. It never asks for a real name, email or location, and nicknames with digits or `@` are rejected.
+- **Minimal data.** Only a nickname, an avatar and an age range are stored: no real name, email or location. Nicknames with digits or `@` are rejected.
 - **An adult must be present.** The server keeps the camera and microphone endpoints locked until an adult confirms they are there.
-- **Photos and audio are never stored.** They are held in memory, read, and dropped, and only confirmed numbers are kept.
-- **No real money.** The app records and simulates only. It has no payments, no bank accounts and no loans.
-- **Model limits.** Code guards refuse financial, medical and political advice. If a kid sounds distressed, the conversation stops and Mileto suggests talking to an adult.
-- **No manipulation.** The app has no nagging notifications, loot boxes, leaderboards or streak punishment.
-- **Posters** never include phone numbers, addresses, schools or real names, and the server checks this before generating one. Nothing is posted to social media from the app.
+- **Photos and audio are never stored.** They are read in memory and dropped; only the confirmed numbers are kept.
+- **No real money.** The app records and simulates only, with no payments, bank accounts or loans.
+- **Model limits.** Code guards refuse financial, medical and political advice. If a kid sounds distressed, Mileto stops and suggests talking to an adult. Posters and generated text are checked for phone numbers and addresses.
+- **No manipulation.** There are no nagging notifications, loot boxes, leaderboards or streak punishment.
 - The repo and the demo video contain only sample data and adults' hands, with no real kids.
-
-## Built during the hackathon
-
-All code was written during the event, starting on Oct 28, 2026. See the commit history.
-
-- Day 1: server core (costs, cash box, scenarios, jars, progress, sales rubric, path), Meta API client and mock mode, agent tools with safety guards, SQLite store, teacher dashboard, the Expo app with all 12 missions, tests and the evaluation harness.
 
 ## Known limits
 
-- iPhone only for now. The same code runs on Android but has not been tested there.
-- SAM counting works best with separated objects on a plain table. The kid always confirms the count.
-- Coin classification uses Muse Spark, and its accuracy is still to be measured.
+- Tested on iPhone and in the browser. The same code should run on Android, but it hasn't been tested there.
+- SAM counts best with objects spread apart on a plain table, and the kid always confirms or corrects the count.
+- The accuracy suites for receipts and coins still need larger sets of real photos.
 - The teacher dashboard is read-only and has no login.
+
+## Built during the hackathon
+
+All code was written during the event, starting on Oct 28, 2026 (see the commit history).
+
+- **Oct 28:** server core and tests, Meta client with mock mode, the 12 missions, the teacher dashboard.
+- **Oct 29 to Nov 3:** guided Duolingo-style lessons, the Socratic tutor, personalized examples and games, world tests, voice and SAM fixes on real devices.
+- **Nov 4:** demo scenes and the final polish for the video.
 
 ## License
 
