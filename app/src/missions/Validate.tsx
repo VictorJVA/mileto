@@ -93,13 +93,18 @@ function Results() {
   const business = useBusiness();
   const { refresh } = useSession();
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [tags, setTags] = useState<Array<{ wouldBuy: boolean | null; priceMentioned: number | null; quote: string }>>([]);
   const [newIdea, setNewIdea] = useState(business.idea ?? "");
   const { busy, error, run, retry } = useCall();
   const m = t.missions.validate;
   const idea = business.idea ?? "my product";
 
   useEffect(() => {
-    run(async () => setSummary((await post<{ summary: Summary }>("/api/ai/interviews", { idea, transcripts: lesson.state.transcripts })).summary));
+    run(async () => {
+      const r = await post<{ summary: Summary; tags: Array<{ wouldBuy: boolean | null; priceMentioned: number | null; quote: string }> }>("/api/ai/interviews", { idea, transcripts: lesson.state.transcripts });
+      setSummary(r.summary);
+      setTags(r.tags ?? []);
+    });
     // Summarizes the interviews collected in the previous step, once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -143,6 +148,21 @@ function Results() {
           </Text>
           <View style={{ height: 14, borderRadius: 7, backgroundColor: colors.surfaceHi, overflow: "hidden" }}>
             <View style={{ width: `${(row.n / total) * 100}%`, height: "100%", backgroundColor: row.color }} />
+          </View>
+        </View>
+      ))}
+      {/* Every answer as the model tagged it; the counts above are computed by code from these tags. */}
+      {tags.map((tg, i) => (
+        <View key={i} style={{ flexDirection: "row", gap: 10, alignItems: "flex-start", borderWidth: 2, borderColor: colors.line, borderRadius: 14, padding: 10, marginBottom: 8 }}>
+          <Text style={{ fontSize: 22 }}>{tg.wouldBuy === true ? "👍" : tg.wouldBuy === false ? "👎" : "🤷"}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[type.small, { color: colors.ink }]} numberOfLines={2}>
+              “{tg.quote}”
+            </Text>
+            <Text style={[type.tag, { fontSize: 11, color: tg.wouldBuy ? colors.good : tg.wouldBuy === false ? colors.retry : colors.muted }]}>
+              {tg.wouldBuy === true ? m.wouldBuy : tg.wouldBuy === false ? m.wouldNot : m.notSure}
+              {tg.priceMentioned ? ` · ${peso(tg.priceMentioned)}` : ""}
+            </Text>
           </View>
         </View>
       ))}

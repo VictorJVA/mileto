@@ -2,7 +2,7 @@
 // crossed with what the kid says they sold. Sales = open - close; revenue = sales x price, in code.
 
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Mascot } from "../components/Mascot";
 import { PhotoInput } from "../components/PhotoInput";
 import { MaskCount, type Box } from "../components/MaskCount";
@@ -10,7 +10,7 @@ import { Body, ErrorNote, Field, Stat, Stepper } from "../components/ui";
 import { VoiceInput } from "../components/VoiceInput";
 import { fill, t } from "../i18n/en";
 import { post } from "../lib/api";
-import { colors, peso } from "../lib/theme";
+import { colors, font, peso, type } from "../lib/theme";
 import { useCall } from "../lib/useCall";
 import { useFooter, useLesson, type StepDef } from "../lesson/engine";
 import { earlier, MissionHead, useBusiness } from "./kit";
@@ -41,6 +41,12 @@ export function parseSpokenCount(text: string): number | null {
 function count(which: "open" | "close"): StepDef {
   function Count() {
     const lesson = useLesson();
+    // On the service path the closing photo is not needed.
+    const skip = which === "close" && lesson.state.service === true;
+    useEffect(() => {
+      if (skip) lesson.next();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     const [noun, setNoun] = useState(String(lesson.state.noun ?? "cup"));
     const [n, setN] = useState<number | null>(null);
     const [scan, setScan] = useState<{ uri: string; boxes: Box[]; width: number | null; height: number | null } | null>(null);
@@ -87,15 +93,57 @@ function count(which: "open" | "close"): StepDef {
         )}
         {n === null && !counting ? <Stepper value={0} onChange={setN} /> : null}
         {tooMany ? <Body muted>🤔 {m.moreAtClose}</Body> : null}
+        {which === "open" ? (
+          <Pressable
+            onPress={() => {
+              lesson.set({ service: true });
+              lesson.next();
+            }}
+            style={({ pressed }) => [{ alignSelf: "center", marginTop: 16, borderWidth: 2, borderColor: colors.line, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 }, pressed && { opacity: 0.7 }]}
+            accessibilityRole="button"
+          >
+            <Text style={[type.small, { color: colors.blue, fontFamily: font.bold }]}>🧑‍🏫 {m.service}</Text>
+          </Pressable>
+        ) : null}
       </>
     );
   }
   return { id: `count-${which}`, Component: Count };
 }
 
+/** A service has nothing to photograph: the kid just says how many sessions, jobs or walks. */
+function Service() {
+  const lesson = useLesson();
+  const [n, setN] = useState<number | null>(null);
+  const m = t.missions.cashbox;
+  const service = lesson.state.service === true;
+  // Products take the photo path instead.
+  useEffect(() => {
+    if (!service) lesson.next();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useFooter(service ? { label: t.common.continue, disabled: n === null || n < 1 } : null, () => {
+    lesson.set({ open: n, close: 0, voice: n });
+    lesson.next();
+  });
+  if (!service) return null;
+  return (
+    <>
+      <MissionHead title={`🧑‍🏫 ${m.serviceTitle}`} say={m.serviceSay} />
+      <VoiceInput onText={(text) => setN(parseSpokenCount(text))} placeholder={m.servicePlaceholder} />
+      {n !== null ? <Stepper value={n} onChange={setN} min={1} /> : null}
+    </>
+  );
+}
+
 function Voice() {
   const lesson = useLesson();
   const [said, setSaid] = useState<number | null>(null);
+  // The service path already asked by voice.
+  useEffect(() => {
+    if (lesson.state.service === true) lesson.next();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const m = t.missions.cashbox;
   useFooter({ label: t.common.continue, disabled: said === null }, () => {
     lesson.set({ voice: said });
@@ -152,4 +200,4 @@ function Result() {
   );
 }
 
-export const cashboxSteps: StepDef[] = [count("open"), count("close"), { id: "voice", Component: Voice }, { id: "result", Component: Result }];
+export const cashboxSteps: StepDef[] = [count("open"), { id: "service", Component: Service }, count("close"), { id: "voice", Component: Voice }, { id: "result", Component: Result }];

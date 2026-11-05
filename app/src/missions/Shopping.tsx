@@ -105,8 +105,8 @@ function Compare() {
 
   useFooter({ label: t.common.continue, disabled: !c, busy }, () => {
     if (!c) return;
-    lesson.set({ result: { item, quotes: c.quotes, cheapestStore: c.cheapestStore, bestUnitPrice: Math.min(...c.quotes.map((q) => q.pricePerUnit)) } });
-    lesson.check(true, { title: m.smartShopper });
+    lesson.set({ comparison: c });
+    lesson.next();
   });
 
   return (
@@ -121,4 +121,49 @@ function Compare() {
   );
 }
 
-export const shoppingSteps: StepDef[] = [{ id: "item", Component: Item }, store(1), store(2), { id: "compare", Component: Compare }];
+const CHECKS = ["quality", "delivery", "minimum"] as const;
+
+/** Cheapest isn't always best: before choosing, compare quality, delivery time and minimum order. */
+function Beyond() {
+  const lesson = useLesson();
+  const c = lesson.state.comparison as Comparison;
+  const item = String(lesson.state.item);
+  const [answers, setAnswers] = useState<Partial<Record<(typeof CHECKS)[number], string>>>({});
+  const [choice, setChoice] = useState<string | null>(null);
+  const m = t.missions.shopping;
+  const stores = c.quotes.map((q) => q.store);
+  const done = CHECKS.every((k) => answers[k]) && choice;
+
+  useFooter({ label: t.common.check, disabled: !done }, () => {
+    lesson.set({ result: { item, quotes: c.quotes, cheapestStore: c.cheapestStore, bestUnitPrice: Math.min(...c.quotes.map((q) => q.pricePerUnit)), checks: answers, chosenSupplier: choice } });
+    lesson.check(true, { title: m.smartShopper, detail: fill(m.chose, { store: choice ?? "" }) });
+  });
+
+  return (
+    <>
+      <MissionHead title={m.beyondTitle} say={m.beyondSay} />
+      {CHECKS.map((k) => (
+        <View key={k} style={{ marginBottom: 12 }}>
+          <Body>{m.checks[k]}</Body>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
+            {stores.map((st) => (
+              <View key={st} style={{ flex: 1 }}>
+                <Option center label={st} selected={answers[k] === st} onPress={() => setAnswers({ ...answers, [k]: st })} />
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
+      <Body>{m.whichSupplier}</Body>
+      <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
+        {stores.map((st) => (
+          <View key={st} style={{ flex: 1 }}>
+            <Option center label={`${st === c.cheapestStore ? "🏆 " : ""}${st}`} sub={`${peso(c.quotes.find((q) => q.store === st)?.pricePerUnit ?? 0)} ${fill(m.each, { item })}`} selected={choice === st} onPress={() => setChoice(st)} />
+          </View>
+        ))}
+      </View>
+    </>
+  );
+}
+
+export const shoppingSteps: StepDef[] = [{ id: "item", Component: Item }, store(1), store(2), { id: "compare", Component: Compare }, { id: "beyond", Component: Beyond }];

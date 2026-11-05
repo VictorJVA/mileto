@@ -144,7 +144,18 @@ function Score() {
               ))}
             </View>
           ) : null}
-          <Mascot text={`${fb.highlight} ${fb.improvement ?? ""}`} mood={fb.score === fb.maxScore ? "proud" : "happy"} size={70} />
+          <View style={{ gap: 8, marginBottom: 12 }}>
+            <View style={{ borderWidth: 2, borderColor: colors.primaryEdge, backgroundColor: colors.goodBg, borderRadius: 14, padding: 12 }}>
+              <Text style={[type.tag, { color: colors.good, fontSize: 12 }]}>✓ {m.didWell}</Text>
+              <Text style={type.body}>{fb.highlight}</Text>
+            </View>
+            {fb.improvement ? (
+              <View style={{ borderWidth: 2, borderColor: colors.blueEdge, backgroundColor: colors.blueSoft, borderRadius: 14, padding: 12 }}>
+                <Text style={[type.tag, { color: colors.blue, fontSize: 12 }]}>➜ {m.toImprove}</Text>
+                <Text style={type.body}>{fb.improvement}</Text>
+              </View>
+            ) : null}
+          </View>
           <Button label={m.again} tone="ghost" onPress={() => lesson.goTo("scenario")} />
         </>
       ) : null}

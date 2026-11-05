@@ -65,10 +65,10 @@ export async function discoverIdeas(kidSaid: string) {
   const guard = checkKidInput(kidSaid);
   if (!guard.ok) return { blocked: SAFE_REPLIES[guard.reason], ideas: [], skills: { have: [], know: [] } };
   return askJson("seed_ideas", SeedIdeas, [
-    { role: "system", content: MASCOT_SYSTEM },
+    { role: "system", content: `${MASCOT_SYSTEM}\nThe app is in English: for this answer, always write in English, even when the kid speaks Spanish.` },
     {
       role: "user",
-      content: `The kid said what they know how to do and what they have:\n"""${kidSaid}"""\nFirst summarize their skills: what they HAVE (things) and what they KNOW how to do, 1-3 short items each, only from what they said. Then propose exactly 3 simple, safe, low-cost business ideas a kid could start this week with that. "why" must point to what the kid said. Write in English, plain text.`,
+      content: `The kid said what they know how to do and what they have:\n"""${kidSaid}"""\nFirst summarize their skills in English: what they HAVE (things) and what they KNOW how to do, 1-3 short items each (2-4 words, like "A tablet", "Drawing"), only from what they said. Then propose exactly 3 simple, safe, low-cost business ideas a kid could start this week with that: concrete things classmates and neighbors actually buy (like snacks, stickers, bracelets, tutoring, pet care, crafts), with short titles of 2-4 words. "why" must point to what the kid said. Always write in English, plain text, even if the kid spoke Spanish.`,
     },
   ]);
 }

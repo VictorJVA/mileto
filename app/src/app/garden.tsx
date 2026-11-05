@@ -21,6 +21,7 @@ export default function Garden() {
   const [stumble, setStumble] = useState("");
   const [hint, setHint] = useState("");
   const [said, setSaid] = useState<string | null>(null);
+  const [earned, setEarned] = useState(false);
   const { busy, error, run } = useCall();
   if (!student || !business) return null;
   const p = student.progress;
@@ -28,7 +29,8 @@ export default function Garden() {
   async function addStumble() {
     if (!business) return;
     const ok = await run(async () => {
-      await post(`/api/businesses/${business.id}/learnings`, { kind: "stumble", text: stumble.trim(), hint: hint.trim() || null });
+      const r = await post<{ newBadges: string[] }>(`/api/businesses/${business.id}/learnings`, { kind: "stumble", text: stumble.trim(), hint: hint.trim() || null });
+      setEarned(r.newBadges.includes("brave_stumble"));
       await refresh();
       return true;
     });
@@ -72,6 +74,12 @@ export default function Garden() {
         </View>
 
         <Text style={[type.h2, styles.h]}>📖 {t.garden.book}</Text>
+        {earned ? (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.gold, borderRadius: 16, borderBottomWidth: 5, borderColor: colors.goldEdge, padding: 14, marginBottom: 12 }}>
+            <Text style={{ fontSize: 34 }}>🪨</Text>
+            <Text style={[type.h2, { color: "#2A1E00", fontFamily: font.black, flex: 1 }]}>{t.garden.braveStumble}</Text>
+          </View>
+        ) : null}
         {said ? <Mascot text={said} mood="stumble" size={60} /> : null}
         {business.learnings?.length ? (
           business.learnings.map((l) => (

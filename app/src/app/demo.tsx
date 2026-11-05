@@ -15,7 +15,7 @@ import { useCall } from "../lib/useCall";
 
 const CLIPS: Array<{ clip: string; title: string; hint: string; scenes: Array<{ scene: string; label: string }> }> = [
   { clip: "01", title: "The three doors", hint: "Entry screen with the three starting points.", scenes: [{ scene: "entry", label: "Entry screen" }] },
-  { clip: "02", title: "Voice: skills", hint: "Tap the mic, say “I like drawing and I have a tablet”.", scenes: [{ scene: "voice", label: "Tell Mileto" }] },
+  { clip: "02", title: "Voice: skills", hint: "Tap the mic and say it in Spanish: “Me gusta dibujar y tengo una tablet”. Mileto answers in English.", scenes: [{ scene: "voice", label: "Tell Mileto" }] },
   {
     clip: "03",
     title: "Ideas, 4 questions, business card",
@@ -26,23 +26,23 @@ const CLIPS: Array<{ clip: string; title: string; hint: string; scenes: Array<{ 
       { scene: "card", label: "Business card" },
     ],
   },
-  { clip: "04", title: "Interviews by voice", hint: "Record 3 to 5 short interviews, then see what people said.", scenes: [{ scene: "interviews", label: "Interviews" }] },
-  { clip: "05", title: "Prices by photo", hint: "Photo of two price labels; code finds the price per unit.", scenes: [{ scene: "prices", label: "Two labels" }] },
+  { clip: "04", title: "Interviews by voice", hint: "Record 5 short interviews: every answer gets tagged, and code counts who would buy.", scenes: [{ scene: "interviews", label: "Interviews" }] },
+  { clip: "05", title: "Prices by photo", hint: "Photo of two price labels; then Mileto asks about quality, delivery time and minimum order.", scenes: [{ scene: "prices", label: "Two labels" }] },
   {
     clip: "06",
     title: "Poster and sale",
-    hint: "Paint the poster; then sell to the customer who says “That's expensive!”.",
+    hint: "Paint the poster (about 20 s); then answer “That's expensive!” out loud and see the rubric: one thing done well, one to improve.",
     scenes: [
       { scene: "poster", label: "Poster" },
       { scene: "sale", label: "Sale" },
     ],
   },
-  { clip: "07", title: "Cash box with SAM", hint: "Opening photo (20), closing photo (6), say “I sold fourteen”.", scenes: [{ scene: "cashbox", label: "Cash box" }] },
-  { clip: "08", title: "Tutor", hint: "Open the olive, tap the mic, say “Give me a hint”.", scenes: [{ scene: "tutor", label: "Tutor" }] },
+  { clip: "07", title: "Cash box with SAM", hint: "Opening photo (20), closing photo (6), say “I sold fourteen”. For a service, tap “Selling a service instead?” and say how many sessions.", scenes: [{ scene: "cashbox", label: "Cash box" }] },
+  { clip: "08", title: "Tutor", hint: "Open the olive, tap the mic, ask out loud. Ask 3 times to see the nudge, the pointer and a similar example.", scenes: [{ scene: "tutor", label: "Tutor" }] },
   {
     clip: "09",
     title: "Decide, jars, garden, stumble",
-    hint: "Scenarios and two jars; then the garden with the learning book.",
+    hint: "Repeat, change the price or save; two jars. In Garden, write a stumble to earn Brave Stumble.",
     scenes: [
       { scene: "decide", label: "Decide" },
       { scene: "garden", label: "Garden" },

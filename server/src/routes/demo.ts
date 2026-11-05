@@ -76,10 +76,7 @@ export function demoRouter(store: Store): Router {
     });
     business = store.updateBusiness(business);
     store.saveProgress(student.id, progress);
-    if (scene.done >= 8) {
-      store.addLearning(business.id, "stumble", "I printed 40 stickers but only sold 14 the first day.", "Print a small batch first, then more.");
-      store.saveProgress(student.id, applyEvent(progress, { type: "badge_earned", badge: "brave_stumble" }));
-    }
+    // The Brave Stumble badge is not pre-awarded: the garden scene earns it live by writing a stumble.
 
     const route = scene.route ? { pathname: scene.route } : { pathname: "/phase/[id]", params: { id: String(scene.phase), start: scene.start } };
     res.json({ student: store.getStudent(student.id), business: store.getBusiness(business.id), route, lessonState: scene.state ?? null });
