@@ -28,7 +28,8 @@ describe("Mateo's juice, end to end (mock models)", () => {
     expect(blocked.status).toBe(403);
     await request(app).post(`/api/students/${studentId}/consent`).send({ adultPresent: true }).expect(200);
     const ok = await request(app).post("/api/ai/count").set("x-student-id", studentId).field("noun", "cup").attach("image", Buffer.from("x"), "a.jpg");
-    expect(ok.body).toEqual({ count: 20, needsConfirmation: true });
+    expect(ok.body).toMatchObject({ count: 20, needsConfirmation: true });
+    expect(ok.body.boxes).toHaveLength(20);
   });
 
   it("starts on the no-idea path and gets three ideas", async () => {
@@ -242,5 +243,15 @@ describe("personalized practice games", () => {
     expect(r.body.games.s.bins).toHaveLength(2);
     // The mock flipped a true/false answer: that game must not be used.
     expect(r.body.games.l).toBeUndefined();
+  });
+});
+
+describe("demo scenes", () => {
+  it("creates Sofi right at the cash box with the earlier phases done", async () => {
+    const r = await request(app).post("/api/demo/scenes/cashbox").send({});
+    expect(r.body.student).toMatchObject({ nickname: "Sofi", adultConsent: true });
+    expect(r.body.business.statuses["11"]).toBe("available");
+    expect(r.body.business.data.price.price).toBe(2000);
+    expect(r.body.route).toMatchObject({ pathname: "/phase/[id]", params: { id: "11", start: "count-open" } });
   });
 });

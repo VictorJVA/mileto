@@ -16,6 +16,7 @@ import { LESSONS } from "../../lesson/content";
 import { Lesson, type StepDef } from "../../lesson/engine";
 import { personal, withIdea } from "../../lesson/steps";
 import { loadPersonal, loadPersonalGames } from "../../lib/personal";
+import { takeDemoState } from "../../lib/demo";
 import { brandSteps } from "../../missions/Brand";
 import { capitalSteps } from "../../missions/Capital";
 import { cashboxSteps } from "../../missions/Cashbox";
@@ -45,7 +46,8 @@ const MISSIONS: Record<string, StepDef[]> = {
 };
 
 export default function PhaseScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, start } = useLocalSearchParams<{ id: string; start?: string }>();
+  const [demoState] = useState(takeDemoState);
   const { path, business, student, completePhase } = useSession();
   const [done, setDone] = useState<{ progress: Progress; before: Progress; badges: string[]; accuracy: string } | null>(null);
   const { error, run } = useCall();
@@ -97,6 +99,8 @@ export default function PhaseScreen() {
       <Lesson
         steps={steps}
         topic={`${phase.title}: ${phase.mission}`}
+        startAt={start}
+        initialState={demoState}
         onClose={() => router.back()}
         // Demo/testing only: never shown in a production build, so kids can't skip validation.
         onSkip={

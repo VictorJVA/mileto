@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { Mascot } from "../components/Mascot";
+import { Text, View } from "react-native";
 import { Body, ErrorNote, Option } from "../components/ui";
+import { colors, type } from "../lib/theme";
 import { VoiceInput } from "../components/VoiceInput";
 import { t } from "../i18n/en";
 import { post, request } from "../lib/api";
@@ -23,10 +25,10 @@ function Talk() {
   const m = t.missions.discover;
 
   useFooter({ label: t.common.continue, disabled: said.length < 3, busy }, async () => {
-    const r = await run(() => post<{ ideas: Idea[]; blocked?: string }>("/api/ai/ideas", { kidSaid: said }));
+    const r = await run(() => post<{ ideas: Idea[]; skills?: { have: string[]; know: string[] }; blocked?: string }>("/api/ai/ideas", { kidSaid: said }));
     if (!r) return;
     if (r.blocked) return setBlocked(r.blocked);
-    lesson.set({ said, ideas: r.ideas });
+    lesson.set({ said, ideas: r.ideas, skills: r.skills ?? null });
     lesson.next();
   });
 
@@ -45,6 +47,7 @@ function Pick() {
   const lesson = useLesson();
   const business = useBusiness();
   const ideas = (lesson.state.ideas as Idea[]) ?? [];
+  const skills = lesson.state.skills as { have: string[]; know: string[] } | null;
   const [picked, setPicked] = useState<number | null>(null);
   const { busy, error, run } = useCall();
 
@@ -60,6 +63,25 @@ function Pick() {
   return (
     <>
       <MissionHead title={t.missions.discover.pick} say={t.missions.discover.pickSay} />
+      {skills && (skills.have.length || skills.know.length) ? (
+        <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
+          {[
+            { label: t.missions.discover.youHave, emoji: "🧰", items: skills.have },
+            { label: t.missions.discover.youKnow, emoji: "🧠", items: skills.know },
+          ].map((col) => (
+            <View key={col.label} style={{ flex: 1, borderWidth: 2, borderColor: colors.line, borderRadius: 14, padding: 12 }}>
+              <Text style={[type.tag, { color: colors.blue, fontSize: 12, marginBottom: 6 }]}>
+                {col.emoji} {col.label}
+              </Text>
+              {col.items.map((i) => (
+                <Text key={i} style={[type.body, { fontSize: 16 }]}>
+                  • {i}
+                </Text>
+              ))}
+            </View>
+          ))}
+        </View>
+      ) : null}
       {ideas.map((idea, i) => (
         <Option key={idea.title} badge={i + 1} label={`🌱 ${idea.title}`} sub={idea.why} selected={picked === i} onPress={() => setPicked(i)} />
       ))}

@@ -44,7 +44,7 @@ export function evaluateSale(tags: SalesTags): SalesFeedback {
 export const MAX_CUSTOMER_TURNS = 3;
 
 export const SALES_SCENARIOS = [
-  { id: "too_expensive", opening: "Hmm, that looks expensive." },
+  { id: "too_expensive", opening: "That's expensive!" },
   { id: "no_money_today", opening: "I don't have money today." },
   { id: "not_sure", opening: "I'm not sure I like that flavor." },
 ] as const;

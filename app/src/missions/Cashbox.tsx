@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { Mascot } from "../components/Mascot";
 import { PhotoInput } from "../components/PhotoInput";
+import { MaskCount, type Box } from "../components/MaskCount";
 import { Body, ErrorNote, Field, Stat, Stepper } from "../components/ui";
 import { VoiceInput } from "../components/VoiceInput";
 import { fill, t } from "../i18n/en";
@@ -42,6 +43,8 @@ function count(which: "open" | "close"): StepDef {
     const lesson = useLesson();
     const [noun, setNoun] = useState(String(lesson.state.noun ?? "cup"));
     const [n, setN] = useState<number | null>(null);
+    const [scan, setScan] = useState<{ uri: string; boxes: Box[]; width: number | null; height: number | null } | null>(null);
+    const [counting, setCounting] = useState(false);
     const m = t.missions.cashbox;
     const tooMany = which === "close" && n !== null && n > Number(lesson.state.open);
     useFooter({ label: t.common.confirm, disabled: n === null || tooMany }, () => {
@@ -52,8 +55,29 @@ function count(which: "open" | "close"): StepDef {
       <>
         <MissionHead title={which === "open" ? `☀️ ${m.open}` : `🌙 ${m.close}`} say={which === "open" ? m.say : m.closeSay} />
         {which === "open" ? <Field label={m.what} value={noun} onChangeText={setNoun} /> : null}
-        <PhotoInput<{ count: number }> endpoint="/api/ai/count" fields={{ noun }} onResult={(r) => setN(r.count)} />
-        {n !== null ? (
+        {scan ? (
+          <MaskCount
+            uri={scan.uri}
+            boxes={scan.boxes}
+            width={scan.width}
+            height={scan.height}
+            onDone={(c) => {
+              setCounting(false);
+              setN(c);
+            }}
+          />
+        ) : null}
+        <PhotoInput<{ count: number; boxes: Box[]; width: number | null; height: number | null }>
+          endpoint="/api/ai/count"
+          preview={false}
+          fields={{ noun }}
+          onResult={(r, uri) => {
+            setN(null);
+            setCounting(true);
+            setScan({ uri, boxes: r.boxes ?? [], width: r.width, height: r.height });
+          }}
+        />
+        {counting ? null : n !== null ? (
           <>
             <Mascot text={fill(m.iSee, { n })} size={60} />
             <Stepper value={n} onChange={setN} />
@@ -61,7 +85,7 @@ function count(which: "open" | "close"): StepDef {
         ) : (
           <Body muted>{m.orCount}</Body>
         )}
-        {n === null ? <Stepper value={0} onChange={setN} /> : null}
+        {n === null && !counting ? <Stepper value={0} onChange={setN} /> : null}
         {tooMany ? <Body muted>🤔 {m.moreAtClose}</Body> : null}
       </>
     );

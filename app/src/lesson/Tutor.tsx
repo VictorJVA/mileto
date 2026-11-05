@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Olive, say } from "../components/Mascot";
 import { errorMessage } from "../components/ui";
+import { Waveform } from "../components/Waveform";
 import { t } from "../i18n/en";
 import { post } from "../lib/api";
 import { colors, font, type } from "../lib/theme";
@@ -167,9 +168,15 @@ export function TutorDock({
               </>
             ) : (
               <>
-                <Text style={[type.small, { flex: 1, color: voice.recording ? colors.blue : colors.muted }]} numberOfLines={2}>
-                  {status ?? t.tutor.idle}
-                </Text>
+                {voice.recording ? (
+                  <View style={{ flex: 1 }}>
+                    <Waveform levels={voice.levels} height={40} />
+                  </View>
+                ) : (
+                  <Text style={[type.small, { flex: 1, color: colors.muted }]} numberOfLines={2}>
+                    {status ?? t.tutor.idle}
+                  </Text>
+                )}
                 <Pressable onPress={() => setTyping(true)} style={styles.round} accessibilityRole="button" accessibilityLabel={t.tutor.keyboard}>
                   <MaterialCommunityIcons name="keyboard-outline" size={22} color={colors.muted} />
                 </Pressable>

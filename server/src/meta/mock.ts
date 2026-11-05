@@ -16,6 +16,7 @@ const lastUserText = (messages: ChatMessage[]): string => {
 
 const fixtures: Record<string, (messages: ChatMessage[]) => unknown> = {
   seed_ideas: () => ({
+    skills: { have: ["A tablet", "Colored paper"], know: ["Drawing", "Making cute characters"] },
     ideas: [
       { title: "Fresh orange juice", why: "You said your aunt has an orange tree and you like making juice." },
       { title: "Painted bookmarks", why: "You like drawing and classmates always need bookmarks." },
@@ -127,6 +128,8 @@ export const mock = {
       x2: (i % 5) * 100 + 80,
       y2: Math.floor(i / 5) * 100 + 80,
       confidence: 0.9,
+      w: 500,
+      h: 400,
     }));
   },
   async generateImage(): Promise<{ b64: string; mimeType: string }> {

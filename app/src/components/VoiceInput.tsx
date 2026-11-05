@@ -7,6 +7,7 @@ import { t } from "../i18n/en";
 import { colors, font, type } from "../lib/theme";
 import { useVoice } from "../lib/useVoice";
 import { Field } from "./ui";
+import { Waveform } from "./Waveform";
 
 /** Calls `onText` with the transcript, or live as the kid types. The step's bottom button decides what to do. */
 export function VoiceInput({ onText, placeholder, label }: { onText: (text: string) => void; placeholder?: string; label?: string }) {
@@ -32,6 +33,7 @@ export function VoiceInput({ onText, placeholder, label }: { onText: (text: stri
           >
             <Text style={{ fontSize: 40 }}>{voice.recording ? "⏹" : "🎙️"}</Text>
           </Pressable>
+          {voice.recording ? <Waveform levels={voice.levels} color={colors.retry} /> : null}
           <Text style={[type.tag, { color: voice.recording ? colors.retry : colors.blue, marginTop: 12 }]}>
             {voice.transcribing ? t.voice.sending : voice.recording ? `${t.voice.stop} · ${voice.seconds}s` : label ?? t.voice.hold}
           </Text>

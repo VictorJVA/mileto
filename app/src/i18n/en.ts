@@ -195,6 +195,8 @@ export const en = {
       pick: "Pick your seed",
       pickSay: "Which idea makes you smile?",
       planted: "Seed planted!",
+      youHave: "You have",
+      youKnow: "You know",
     },
     choose: {
       questions: {
@@ -238,6 +240,7 @@ export const en = {
       adjust: "Fewer than half said yes. That's a great clue: let's adjust the idea.",
       tryNew: "Try the new idea",
       wouldBuy: "Would buy",
+      wouldBuyOf: "{n} of {total} would buy",
       wouldNot: "Would not buy",
       notSure: "Not sure",
       lowest: "Lowest",
@@ -335,6 +338,7 @@ export const en = {
       other: "Other",
       done: "Seller in training!",
       bestAction: "What worked best:",
+      rubric: { greeted: "Greeted the customer", saidPrice: "Said the price", answeredObjection: "Answered the worry", closed: "Asked for the sale" } as Record<string, string>,
     },
     cashbox: {
       open: "Opening photo",

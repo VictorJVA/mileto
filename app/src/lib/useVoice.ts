@@ -10,7 +10,7 @@ import {
   useAudioRecorderState,
   type RecordingOptions,
 } from "expo-audio";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { errorMessage } from "../components/ui";
 import { t } from "../i18n/en";
@@ -22,6 +22,8 @@ const WAV_16K_MONO: RecordingOptions = {
   sampleRate: 16000,
   numberOfChannels: 1,
   bitRate: 256000,
+  // Live mic level for the waveform while the kid talks.
+  isMeteringEnabled: true,
   ios: {
     outputFormat: IOSOutputFormat.LINEARPCM,
     audioQuality: AudioQuality.HIGH,
@@ -41,7 +43,18 @@ const WAV_16K_MONO: RecordingOptions = {
 export function useVoice(onTranscript: (text: string) => void) {
   const { student } = useSession();
   const recorder = useAudioRecorder(WAV_16K_MONO);
-  const state = useAudioRecorderState(recorder);
+  const state = useAudioRecorderState(recorder, 80);
+  // The last few mic levels (0..1), newest last, to draw a live waveform.
+  const [levels, setLevels] = useState<number[]>([]);
+  const last = useRef(0);
+  useEffect(() => {
+    if (!state.isRecording) return void (last.current = 0);
+    const db = state.metering ?? -60;
+    const level = Math.max(0.05, Math.min(1, (db + 55) / 50));
+    if (state.durationMillis === last.current) return;
+    last.current = state.durationMillis;
+    setLevels((l) => [...l.slice(-27), level]);
+  }, [state.isRecording, state.metering, state.durationMillis]);
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canRecord = Platform.OS === "ios" && !!student?.adultConsent;
@@ -72,9 +85,10 @@ export function useVoice(onTranscript: (text: string) => void) {
     if (!perm.granted) return "denied";
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
     await recorder.prepareToRecordAsync();
+    setLevels([]);
     recorder.record();
     return "recording";
   }
 
-  return { canRecord, recording: state.isRecording, seconds: Math.round(state.durationMillis / 1000), transcribing, error, toggle };
+  return { levels, canRecord, recording: state.isRecording, seconds: Math.round(state.durationMillis / 1000), transcribing, error, toggle };
 }

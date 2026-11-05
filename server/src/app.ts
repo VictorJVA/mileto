@@ -11,6 +11,7 @@ import { aiRouter } from "./routes/ai.js";
 import { calcRouter } from "./routes/calc.js";
 import { NotFoundError, studentsRouter } from "./routes/students.js";
 import { teacherRouter } from "./routes/teacher.js";
+import { demoRouter } from "./routes/demo.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -43,6 +44,8 @@ export function createApp(store = new Store()) {
   app.use("/api/calc", calcRouter);
   app.use("/api/ai", aiRouter(store));
   app.use("/api/teacher", teacherRouter(store));
+  // Demo branch only: ready-made scenes for recording the video.
+  app.use("/api/demo", demoRouter(store));
   app.use("/teacher", express.static(path.join(here, "..", "public", "teacher")));
 
   const onError: ErrorRequestHandler = (err, _req, res, _next) => {

@@ -171,6 +171,11 @@ export default function MapScreen() {
         <View style={styles.chip}>
           <Text style={[styles.chipText, { color: colors.gold }]}>🏅 {p.badges.length}</Text>
         </View>
+        <Link href="/demo" asChild>
+          <Pressable style={styles.chip} accessibilityRole="button" accessibilityLabel="Demo scenes">
+            <Text style={styles.chipText}>🎬</Text>
+          </Pressable>
+        </Link>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>

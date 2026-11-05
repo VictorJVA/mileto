@@ -33,6 +33,9 @@ function Hello() {
       </View>
       <View style={styles.bigTail} />
       <Olive mood="happy" size={150} />
+      <Pressable onPress={() => router.push("/demo")} style={{ marginTop: 28 }} accessibilityRole="button">
+        <Text style={[type.tag, { color: colors.muted }]}>🎬 Demo scenes</Text>
+      </Pressable>
     </View>
   );
 }

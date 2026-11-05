@@ -113,6 +113,7 @@ export function Lesson({
   requeueMistakes = true,
   tutor = true,
   onSkip,
+  startAt,
 }: {
   steps: StepDef[];
   /** What the lesson is about, for the tutor. */
@@ -127,9 +128,11 @@ export function Lesson({
   tutor?: boolean;
   /** Demo/testing only: finish the lesson right away. */
   onSkip?: () => void;
+  /** Demo scenes start at a given step id instead of the first one. */
+  startAt?: string;
 }) {
   const [queue, setQueue] = useState<number[]>(() => steps.map((_, i) => i));
-  const [pos, setPos] = useState(0);
+  const [pos, setPos] = useState(() => Math.max(0, startAt ? steps.findIndex((s) => s.id === startAt) : 0));
   const [state, setState] = useState<Record<string, unknown>>(initialState);
   const [feedback, setFeedback] = useState<(Feedback & { requeue: boolean }) | null>(null);
   const [footer, setFooterState] = useState<FooterSpec | null>(null);
@@ -179,7 +182,8 @@ export function Lesson({
   }, []);
 
   const finish = () => {
-    const checked = steps.filter((s) => s.checkable).length;
+    // Only questions the kid actually answered (a demo scene or a test may skip some).
+    const checked = firstTry.current.size;
     const right = [...firstTry.current.values()].filter(Boolean).length;
     onDone(stateRef.current, { firstTry: right, checked });
   };

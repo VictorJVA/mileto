@@ -128,6 +128,9 @@ function Results() {
   return (
     <>
       <MissionHead title={fill(m.results, { n: summary.interviews })} />
+      <Text style={[type.title, { color: keep ? colors.good : colors.retry, fontFamily: font.black, fontSize: 34, marginBottom: 8 }]}>
+        {fill(m.wouldBuyOf, { n: summary.interested, total: summary.interviews })}
+      </Text>
       <Mascot text={keep ? m.keepGoing : m.adjust} mood={keep ? "happy" : "stumble"} size={70} />
       {[
         { label: m.wouldBuy, n: summary.interested, color: colors.primary },

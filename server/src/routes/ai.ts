@@ -80,9 +80,9 @@ export function aiRouter(store: Store): Router {
 
   router.post("/count", requireAdultConsent, upload.single("image"), async (req, res) => {
     const noun = z.string().min(1).max(40).parse(req.body.noun);
-    const { count, needsConfirmation } = await tools.countObjects(toDataUrl(requireFile(req.file)), noun);
-    // Boxes stay on the server; the app only needs the number to ask "I see 20, is that right?".
-    res.json({ count, needsConfirmation });
+    const { count, needsConfirmation, boxes } = await tools.countObjects(toDataUrl(requireFile(req.file)), noun);
+    // Box positions let the app draw SAM's masks over the photo while it counts; the photo is not kept.
+    res.json({ count, needsConfirmation, width: boxes[0]?.w ?? null, height: boxes[0]?.h ?? null, boxes: boxes.map(({ x1, y1, x2, y2 }) => ({ x1, y1, x2, y2 })) });
   });
 
   router.post("/coins", requireAdultConsent, upload.single("image"), async (req, res) => {

@@ -2,13 +2,13 @@
 
 import { router } from "expo-router";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Mascot } from "../components/Mascot";
 import { ErrorNote, Field, Option } from "../components/ui";
 import { t } from "../i18n/en";
 import { post, type Business, type EntryPoint } from "../lib/api";
 import { useSession } from "../lib/session";
-import { colors } from "../lib/theme";
+import { colors, type } from "../lib/theme";
 import { useCall } from "../lib/useCall";
 import { Lesson, useFooter, type StepDef } from "../lesson/engine";
 
@@ -49,6 +49,9 @@ function Choose() {
       ))}
       {needsIdea ? <Field label={t.entry.ideaTitle} value={idea} onChangeText={setIdea} maxLength={200} placeholder={t.entry.ideaPlaceholder} autoFocus /> : null}
       <ErrorNote error={error} />
+      <Pressable onPress={() => router.push("/demo")} style={{ alignSelf: "center", marginTop: 24 }} accessibilityRole="button">
+        <Text style={[type.tag, { color: colors.muted }]}>🎬 Demo scenes</Text>
+      </Pressable>
     </>
   );
 }

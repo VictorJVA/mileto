@@ -82,7 +82,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       async setBusiness(b) {
         setBusinessState(b);
-        if (student) await persist(student.id, b.id);
+        // The business knows its owner; right after signIn the `student` here may still be the old one.
+        const owner = (b as Business & { studentId?: string }).studentId ?? student?.id;
+        if (owner) await persist(owner, b.id);
       },
       async refresh() {
         if (student) await load(student.id, business?.id ?? null);

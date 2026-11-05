@@ -107,10 +107,15 @@ function Score() {
   const lesson = useLesson();
   const scenario = lesson.state.scenario as { opening: string };
   const [fb, setFb] = useState<Feedback | null>(null);
+  const [tags, setTags] = useState<Record<string, boolean> | null>(null);
   const { busy, error, run, retry } = useCall();
   const m = t.missions.sales;
   useEffect(() => {
-    run(async () => setFb((await post<{ feedback: Feedback }>("/api/ai/evaluate-sale", { objection: scenario.opening, history: lesson.state.history })).feedback));
+    run(async () => {
+      const r = await post<{ feedback: Feedback; tags: Record<string, boolean> }>("/api/ai/evaluate-sale", { objection: scenario.opening, history: lesson.state.history });
+      setFb(r.feedback);
+      setTags(r.tags);
+    });
     // Scores the finished conversation once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -127,6 +132,18 @@ function Score() {
             {"⭐".repeat(fb.score)}
             <Text style={{ opacity: 0.25 }}>{"⭐".repeat(fb.maxScore - fb.score)}</Text>
           </Text>
+          {tags ? (
+            <View style={{ borderWidth: 2, borderColor: colors.line, borderRadius: 16, padding: 12, marginBottom: 14 }}>
+              {(["greeted", "saidPrice", "answeredObjection", "closed"] as const).map((k) => (
+                <View key={k} style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 6 }}>
+                  <View style={{ width: 26, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: tags[k] ? colors.good : colors.surfaceHi }}>
+                    <Text style={{ fontFamily: font.black, color: tags[k] ? colors.bg : colors.faint }}>{tags[k] ? "✓" : "·"}</Text>
+                  </View>
+                  <Text style={[type.body, { color: tags[k] ? colors.ink : colors.muted }]}>{m.rubric[k]}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
           <Mascot text={`${fb.highlight} ${fb.improvement ?? ""}`} mood={fb.score === fb.maxScore ? "proud" : "happy"} size={70} />
           <Button label={m.again} tone="ghost" onPress={() => lesson.goTo("scenario")} />
         </>

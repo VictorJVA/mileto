@@ -14,11 +14,15 @@ export function PhotoInput<T>({
   endpoint,
   fields = {},
   onResult,
+  preview = true,
 }: {
+  /** False when the screen shows the photo itself (e.g. with SAM's masks on top). */
+  preview?: boolean;
   label?: string;
   endpoint: string;
   fields?: Record<string, string>;
-  onResult: (result: T) => void;
+  /** Receives the server's result and the local photo (it never leaves the phone after the upload). */
+  onResult: (result: T, uri: string) => void;
 }) {
   const { student } = useSession();
   const [uri, setUri] = useState<string | null>(null);
@@ -36,7 +40,7 @@ export function PhotoInput<T>({
     setUri(asset.uri);
     setBusy(true);
     try {
-      onResult(await upload<T>(endpoint, "image", { uri: asset.uri, name: "photo.jpg", type: asset.mimeType ?? "image/jpeg" }, fields));
+      onResult(await upload<T>(endpoint, "image", { uri: asset.uri, name: "photo.jpg", type: asset.mimeType ?? "image/jpeg" }, fields), asset.uri);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -48,8 +52,8 @@ export function PhotoInput<T>({
 
   return (
     <View style={{ marginVertical: 8 }}>
-      <Pressable onPress={take} disabled={busy} style={({ pressed }) => [styles.frame, pressed && { borderBottomWidth: 2, marginTop: 2 }]} accessibilityRole="button">
-        {uri ? <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
+      <Pressable onPress={take} disabled={busy} style={({ pressed }) => [styles.frame, uri && !preview && { height: 64 }, pressed && { borderBottomWidth: 2, marginTop: 2 }]} accessibilityRole="button">
+        {uri && preview ? <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" /> : null}
         <View style={[styles.label, uri ? styles.labelOnPhoto : null]}>
           <Text style={{ fontSize: uri ? 20 : 44 }}>📷</Text>
           <Text style={[type.tag, { color: colors.blue }]}>{busy ? t.common.loading : uri ? t.photo.retake : label ?? t.photo.take}</Text>

@@ -109,6 +109,9 @@ export interface SamBox {
   x2: number;
   y2: number;
   confidence: number | null;
+  /** Source image size, so the app can draw the box over the photo. */
+  w: number;
+  h: number;
 }
 
 /** Segments every instance of `noun` in an image with SAM 3.1 and returns one box per match. */
@@ -120,7 +123,6 @@ export async function segment(imageUrl: string, noun: string): Promise<SamBox[]>
     accept: "text/event-stream",
     body: JSON.stringify({
       model: MODELS.sam,
-      include_confidence: "true",
       stream: true,
       input: [
         {
@@ -169,6 +171,8 @@ export function parseSamOutput(text: string): SamBox[] {
       x2: Number(kv.x2),
       y2: Number(kv.y2),
       confidence: kv.c === undefined ? null : Number(kv.c),
+      w: Number(kv.w),
+      h: Number(kv.h),
     });
   }
   return boxes;
