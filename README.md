@@ -47,7 +47,7 @@ Every phase is a short lesson before the real mission. It opens with a **story**
 | --- | --- | --- |
 | **Muse Spark** (`muse-spark-1.1`, `reasoning_effort: minimal`) | Ideas and skills summary, reading price labels, tagging interviews and sales talks, the simulated customer, the Socratic tutor, brand names, personalized examples and games | ~2–4 s per reply (1.3 took 5–17 s for the same prompts) |
 | **Muse Voice Transcribe** (`muse-voice-transcribe-1.0`) | Interviews, answers, sales practice, pitch, questions to the tutor | ~2 s. iPhone audio is converted to 16 kHz mono WAV on the server, since the API only takes 16 or 24 kHz |
-| **SAM 3.1** (`sam-3.1`) | Counting products in the opening and closing cash-box photos; the app draws each detection | 20/20 and 6/6 on our test photos, 1–2 s |
+| **SAM 3.1** (`sam-3.1`) | Counting products in the opening and closing cash-box photos. SAM is asked with a few phrasings in parallel, and code merges the detections, dropping duplicates, drawings inside a sticker and whole sheets. The app draws each detection | Exact on all our test photos, 1–2 s |
 | **Muse Image** (`muse-image-1.0`) | Poster art, with no text in the image | ~20 s |
 
 All calls go through [`server/src/meta/client.ts`](server/src/meta/client.ts). API keys live only on the server and never reach the phone.
@@ -129,22 +129,22 @@ The sample photos give exact results with real models (SAM counts 20 and 6; Muse
 | Port 4000 is already in use | Stop the other process, or set `PORT=4001` in `server/.env` and start the app with `EXPO_PUBLIC_API_URL=http://localhost:4001 npm run web` |
 | The photo buttons say an adult must unlock them | On the map, tap *"Ask an adult to unlock the camera and mic"* |
 | *"My olive brain is busy"* with a real key | The Meta API returned an error; the server terminal prints the exact reason |
-| SAM counts 0 objects | Spread the objects apart on a plain table, or change the word in *"What are you counting?"* (for example *round sticker*) |
+| SAM counts too few or too many | Spread the objects apart on a plain table, with good light and the whole group in the photo. The kid can always correct the number before confirming |
 
 ## Tests and evaluation
 
 ```sh
-npm test                                   # 89 tests: calculations, API end to end, safety, SAM parsing, WAV conversion, personalization
+npm test                                   # 95 tests: calculations, API end to end, safety, SAM parsing, WAV conversion, personalization
 npm run typecheck                          # server and app
 npm --prefix server run eval -- limits     # accuracy suites: count | receipts | voice | limits
 ```
 
 | What | Target | Result so far |
 | --- | --- | --- |
-| Calculations (unit and API tests) | 100% | ✅ 89/89 passing |
+| Calculations (unit and API tests) | 100% | ✅ 95/95 passing |
 | Refusing personal financial advice | 0 answers | ✅ 5/5 refused by the code guard |
 | Tutor never reveals the answer | 0 leaks | ✅ server guard tested on direct and paraphrased answers |
-| SAM 3.1 object counting | 90% exact | ✅ 2/2 test photos exact (20 and 6). A larger set of real photos is still to run |
+| SAM 3.1 object counting | 90% exact | ✅ 18/18 exact counts on 6 test photos with mixed shapes, drawings, rotation, a backing sheet and touching stickers, with any counting word. A larger set of real photos is still to run |
 | Spanish voice to text | 90% of numbers | ✅ correct on our test recordings (16 and 44.1 kHz). A larger accent set is still to run |
 | Reply time | under 5 s | ✅ 2–4 s for Muse Spark and voice; the poster takes ~20 s |
 

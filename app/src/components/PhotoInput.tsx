@@ -1,5 +1,6 @@
 // Takes a photo for the server to read (prices, counts, coins). Photos are never stored (privacy rules).
 
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
@@ -8,6 +9,26 @@ import { upload } from "../lib/api";
 import { useSession } from "../lib/session";
 import { colors, type } from "../lib/theme";
 import { errorMessage } from "./ui";
+
+const MAX_SIDE = 1600;
+
+/**
+ * Re-renders the photo upright (phone photos store their rotation as metadata, which vision models
+ * may ignore) and at most 1600 px wide, so uploads are fast and SAM's boxes line up with what the
+ * kid sees. Falls back to the original photo if anything fails.
+ */
+async function normalize(asset: ImagePicker.ImagePickerAsset): Promise<string> {
+  if (Platform.OS === "web") return asset.uri;
+  try {
+    const context = ImageManipulator.manipulate(asset.uri);
+    if ((asset.width ?? 0) > MAX_SIDE) context.resize({ width: MAX_SIDE, height: null });
+    const image = await context.renderAsync();
+    const saved = await image.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 });
+    return saved.uri;
+  } catch {
+    return asset.uri;
+  }
+}
 
 export function PhotoInput<T>({
   label,
@@ -37,10 +58,11 @@ export function PhotoInput<T>({
     const result = perm.granted ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
     if (result.canceled) return;
     const asset = result.assets[0];
-    setUri(asset.uri);
     setBusy(true);
     try {
-      onResult(await upload<T>(endpoint, "image", { uri: asset.uri, name: "photo.jpg", type: asset.mimeType ?? "image/jpeg" }, fields), asset.uri);
+      const photo = await normalize(asset);
+      setUri(photo);
+      onResult(await upload<T>(endpoint, "image", { uri: photo, name: "photo.jpg", type: "image/jpeg" }, fields), photo);
     } catch (e) {
       setError(errorMessage(e));
     } finally {

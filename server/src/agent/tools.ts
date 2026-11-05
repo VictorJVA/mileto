@@ -4,6 +4,8 @@
 import { z } from "zod";
 import * as meta from "../meta/client.js";
 import {
+  countPrompts,
+  mergeDetections,
   COP_COIN_DENOMINATIONS,
   countCustomerSources,
   evaluateSale,
@@ -139,13 +141,13 @@ export async function readPricePhoto(imageDataUrl: string, lookingFor: string[])
 
 // count_objects: SAM 3.1 counts; the kid confirms ("I see 20, is that right?").
 export async function countObjects(imageUrl: string, noun: string) {
-  // SAM works best with a concrete noun phrase; if the kid's word finds nothing, try close variants.
-  const tries = [noun, `round ${noun}`, `small ${noun}`];
-  let boxes: meta.SamBox[] = [];
-  for (const phrase of tries) {
-    boxes = await meta.segment(imageUrl, phrase);
-    if (boxes.length) break;
-  }
+  // One phrasing can miss objects ("round sticker" skips square ones), so SAM is asked with a few
+  // variants in parallel and code merges the detections into one clean count. The kid still confirms.
+  const results = await Promise.all(countPrompts(noun).map((p) => meta.segment(imageUrl, p).catch(() => [] as meta.SamBox[])));
+  const all = results.flat();
+  const w = all[0]?.w ?? 0;
+  const h = all[0]?.h ?? 0;
+  const boxes = mergeDetections(all, w, h);
   return { count: boxes.length, boxes, needsConfirmation: true as const };
 }
 

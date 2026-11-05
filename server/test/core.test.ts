@@ -346,3 +346,30 @@ describe("normalizeWav", async () => {
     expect(() => normalizeWav(Buffer.from("not audio at all"))).toThrow(/WAV/);
   });
 });
+
+describe("mergeDetections", async () => {
+  const { mergeDetections, countPrompts } = await import("../src/core/index.js");
+  const box = (x: number, y: number, s = 100) => ({ x1: x, y1: y, x2: x + s, y2: y + s });
+
+  it("keeps one box when two prompts find the same sticker", () => {
+    expect(mergeDetections([box(0, 0), box(5, 5), box(300, 0)], 1000, 800)).toHaveLength(2);
+  });
+  it("adds stickers that only one prompt found", () => {
+    const roundOnly = [box(0, 0), box(200, 0)];
+    const all = [box(0, 0), box(200, 0), box(400, 0)];
+    expect(mergeDetections([...roundOnly, ...all], 1000, 800)).toHaveLength(3);
+  });
+  it("does not count the drawing inside a sticker", () => {
+    expect(mergeDetections([box(0, 0, 120), box(40, 40, 30)], 1000, 800)).toHaveLength(1);
+  });
+  it("drops a box covering a big part of the photo (a sheet or the table)", () => {
+    expect(mergeDetections([box(0, 0, 700), box(10, 10), box(200, 200)], 1000, 800)).toHaveLength(2);
+  });
+  it("keeps stickers that touch but don't overlap much", () => {
+    expect(mergeDetections([box(0, 0), box(95, 0), box(190, 0)], 1000, 800)).toHaveLength(3);
+  });
+  it("asks SAM with the word, its base, a plural and a round form", () => {
+    expect(countPrompts("Round Sticker")).toEqual(["round sticker", "sticker", "stickers"]);
+    expect(countPrompts("cups")).toEqual(["cups", "cup", "round cup"]);
+  });
+});

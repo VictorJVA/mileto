@@ -40,7 +40,7 @@ const SCENES: Record<string, { entry: "no_idea" | "has_idea" | null; done: numbe
   prices: { entry: "no_idea", done: 4, phase: 5, start: "store-1", state: { item: "sticker paper" } },
   poster: { entry: "no_idea", done: 8, phase: 9, start: "poster", state: { brand: { name: DATA.brand.name, slogan: DATA.brand.slogan, colors: DATA.brand.colors } } },
   sale: { entry: "no_idea", done: 9, phase: 10, start: "scenario" },
-  cashbox: { entry: "no_idea", done: 10, phase: 11, start: "count-open", state: { noun: "round sticker" } },
+  cashbox: { entry: "no_idea", done: 10, phase: 11, start: "count-open", state: { noun: "sticker" } },
   decide: { entry: "no_idea", done: 11, phase: 12, start: "choose" },
   garden: { entry: "no_idea", done: 11, route: "/garden" },
 };

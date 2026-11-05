@@ -7,3 +7,4 @@ export * from "./sales.js";
 export * from "./validation.js";
 export * from "./promotion.js";
 export * from "./path.js";
+export * from "./detections.js";
